@@ -6,3 +6,5 @@ vim.defer_fn(function()
     vim.api.nvim_exec2(':bd#', { output = true })
   end
 end, 0)
+
+require('harbinger.whichkey')

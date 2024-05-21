@@ -8,8 +8,7 @@ local fn = vim.fn
 dofile(vim.g.ntc .. 'harbinger')
 
 local raw_height = 1
-local pointer =
-  require('neviraide-ui.icons.utils').icon('', 'dot-fill', 0, 1)
+local pointer = require('stigmata.utils').icon('', 'dot-fill', 0, 1)
 
 local buttons = require('harbinger.buttons')
 local headers = require('harbinger.ascii')

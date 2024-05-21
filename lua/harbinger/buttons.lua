@@ -2,7 +2,7 @@
 local function btn(title, icon, nonicon, command)
   return {
     title,
-    require('neviraide-ui.icons.utils').icon(icon, nonicon),
+    require('stigmata.utils').icon(icon, nonicon),
     command,
   }
 end
