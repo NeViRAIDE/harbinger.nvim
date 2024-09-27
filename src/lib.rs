@@ -4,8 +4,7 @@ use nvim_oxi::{
     api::{
         create_user_command, err_writeln,
         opts::CreateCommandOpts,
-        set_keymap,
-        types::{CommandArgs, CommandNArgs, Mode},
+        types::{CommandArgs, CommandNArgs},
     },
     Dictionary, Function, Result as OxiResult,
 };
@@ -14,7 +13,9 @@ use core::Dashboard;
 use setup::Config;
 
 mod buffer;
+mod content;
 mod core;
+mod defaults;
 mod error;
 mod setup;
 
@@ -22,7 +23,6 @@ mod setup;
 fn harbinger() -> OxiResult<Dictionary> {
     let config = Config::default();
 
-    // Используем Rc<RefCell>, чтобы разделить владение и сделать объект изменяемым
     let app = Rc::new(RefCell::new(Dashboard::new(config)));
 
     let opts = CreateCommandOpts::builder()
@@ -40,14 +40,7 @@ fn harbinger() -> OxiResult<Dictionary> {
 
     create_user_command("Harbinger", open_or_close_dashboard, &opts)?;
 
-    set_keymap(
-        Mode::Normal,
-        "<M-d>",
-        "<cmd>Harbinger<cr>",
-        &Default::default(),
-    )?;
-
-    let app_setup = Rc::clone(&app); // Клонируем Rc для использования в другом замыкании
+    let app_setup = Rc::clone(&app);
     let exports: Dictionary =
         Dictionary::from_iter::<[(&str, Function<Dictionary, OxiResult<()>>); 1]>([(
             "setup",

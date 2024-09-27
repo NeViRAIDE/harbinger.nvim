@@ -1,8 +1,9 @@
 use nvim_oxi::{
     api::{
-        create_autocmd, create_buf, err_writeln, get_current_buf, list_bufs,
+        create_autocmd, create_buf, err_writeln, get_current_buf, get_option_value, list_bufs,
         opts::{CreateAutocmdOpts, OptionOpts, OptionScope},
-        set_current_buf,
+        set_current_buf, set_keymap,
+        types::Mode,
     },
     Dictionary, Result as OxiResult,
 };
@@ -22,6 +23,14 @@ impl Dashboard {
 
     pub fn setup(&mut self, dict: Dictionary) -> OxiResult<()> {
         self.config = Config::from_dict(dict);
+
+        set_keymap(
+            Mode::Normal,
+            &self.config.keymap,
+            "<cmd>Harbinger<cr>",
+            &Default::default(),
+        )?;
+
         Ok(())
     }
 
@@ -29,7 +38,7 @@ impl Dashboard {
         let current_buf = get_current_buf();
 
         let buf_opts = OptionOpts::builder().scope(OptionScope::Local).build();
-        let filetype: String = nvim_oxi::api::get_option_value("filetype", &buf_opts)?;
+        let filetype: String = get_option_value("filetype", &buf_opts)?;
 
         if filetype == "harbinger" {
             let alternate_buf = list_bufs().find(|b| *b != current_buf && b.is_valid());
@@ -49,8 +58,9 @@ impl Dashboard {
                 Ok(mut buf) => {
                     set_current_buf(&buf)?;
 
-                    let dashboard_text = "Welcome to Neovim!\n===================\n\nUse :q to quit, or :e to open a file.";
-                    BufferManager::set_buffer_content(&mut buf, dashboard_text)?;
+                    let dashboard_content = crate::content::generate_dashboard_content();
+
+                    BufferManager::set_buffer_content(&mut buf, &dashboard_content.join("\n"))?;
                     BufferManager::configure_buffer()?;
 
                     let buf_clone = buf.clone();
