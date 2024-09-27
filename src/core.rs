@@ -1,8 +1,8 @@
-use std::{cell::RefCell, rc::Rc};
-
 use nvim_oxi::{
     api::{
-        create_autocmd, create_buf, err_writeln, opts::CreateAutocmdOpts, set_current_buf, Buffer,
+        create_autocmd, create_buf, err_writeln, get_current_buf, list_bufs,
+        opts::{CreateAutocmdOpts, OptionOpts, OptionScope},
+        set_current_buf,
     },
     Dictionary, Result as OxiResult,
 };
@@ -13,15 +13,11 @@ use crate::setup::Config;
 #[derive(Debug)]
 pub struct Dashboard {
     pub config: Config,
-    dashboard_buf_id: Rc<RefCell<Option<Buffer>>>,
 }
 
 impl Dashboard {
     pub fn new(config: Config) -> Self {
-        Dashboard {
-            config,
-            dashboard_buf_id: Rc::new(RefCell::new(None)),
-        }
+        Dashboard { config }
     }
 
     pub fn setup(&mut self, dict: Dictionary) -> OxiResult<()> {
@@ -30,31 +26,34 @@ impl Dashboard {
     }
 
     pub fn toggle_dashboard(&self) -> OxiResult<()> {
-        let mut dashboard_buf_id = self.dashboard_buf_id.borrow_mut();
+        let current_buf = get_current_buf();
 
-        if let Some(buf) = dashboard_buf_id.as_ref() {
-            if buf.is_valid() {
-                // Удаляем буфер с опцией force
-                BufferManager::delete_buffer(buf)?;
+        let buf_opts = OptionOpts::builder().scope(OptionScope::Local).build();
+        let filetype: String = nvim_oxi::api::get_option_value("filetype", &buf_opts)?;
+
+        if filetype == "harbinger" {
+            let alternate_buf = list_bufs().find(|b| *b != current_buf && b.is_valid());
+
+            if let Some(alternate_buf) = alternate_buf {
+                set_current_buf(&alternate_buf)?;
+            } else {
+                let temp_buf = create_buf(false, true)?;
+                set_current_buf(&temp_buf)?;
             }
-            *dashboard_buf_id = None;
+
+            if current_buf.is_valid() {
+                BufferManager::delete_buffer(&current_buf)?;
+            }
         } else {
-            // Создаём новый буфер
             match create_buf(false, true) {
                 Ok(mut buf) => {
                     set_current_buf(&buf)?;
 
-                    let dashboard_text =
-                        "Welcome to Neovim!\n===================\n\nUse :q to quit, or :e to open a file.";
-
+                    let dashboard_text = "Welcome to Neovim!\n===================\n\nUse :q to quit, or :e to open a file.";
                     BufferManager::set_buffer_content(&mut buf, dashboard_text)?;
                     BufferManager::configure_buffer()?;
 
-                    *dashboard_buf_id = Some(buf.clone());
-
                     let buf_clone = buf.clone();
-
-                    // Создаем автокоманду для удаления буфера при его выгрузке
                     let autocmd_opts = CreateAutocmdOpts::builder()
                         .buffer(buf_clone.clone())
                         .callback(move |_| {
