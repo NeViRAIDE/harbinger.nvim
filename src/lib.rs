@@ -1,15 +1,19 @@
-use std::sync::{Arc, Mutex};
+use std::{cell::RefCell, rc::Rc};
 
 use nvim_oxi::{
-    api::{create_user_command, err_writeln, opts::CreateCommandOpts, types::*},
-    Dictionary, Error as OxiError, Function, Result as OxiResult,
+    api::{
+        create_user_command, err_writeln,
+        opts::CreateCommandOpts,
+        set_keymap,
+        types::{CommandArgs, CommandNArgs, Mode},
+    },
+    Dictionary, Function, Result as OxiResult,
 };
 
-use error::PluginError;
+use core::Dashboard;
 use setup::Config;
 
-use self::core::App;
-
+mod buffer;
 mod core;
 mod error;
 mod setup;
@@ -18,37 +22,38 @@ mod setup;
 fn harbinger() -> OxiResult<Dictionary> {
     let config = Config::default();
 
-    let app = Arc::new(Mutex::new(App::new(config)));
+    // Используем Rc<RefCell>, чтобы разделить владение и сделать объект изменяемым
+    let app = Rc::new(RefCell::new(Dashboard::new(config)));
 
     let opts = CreateCommandOpts::builder()
         .bang(true)
-        .desc("shows a greetings message")
-        .nargs(CommandNArgs::ZeroOrOne)
+        .desc("Opens or closes the dashboard")
+        .nargs(CommandNArgs::Zero)
         .build();
 
-    let greetings = |args: CommandArgs| {
-        let who = args.args.unwrap_or("from Rust".to_owned());
-        let bang = if args.bang { "!" } else { "" };
-        print!("Hello {}{}", who, bang);
+    let app_handle = Rc::clone(&app);
+    let open_or_close_dashboard = move |_: CommandArgs| {
+        if let Err(e) = app_handle.borrow_mut().toggle_dashboard() {
+            err_writeln(&format!("Error toggling dashboard: {}", e));
+        }
     };
 
-    create_user_command("Harbinger", greetings, &opts)?;
+    create_user_command("Harbinger", open_or_close_dashboard, &opts)?;
 
-    let app_setup = Arc::clone(&app);
+    set_keymap(
+        Mode::Normal,
+        "<M-d>",
+        "<cmd>Harbinger<cr>",
+        &Default::default(),
+    )?;
+
+    let app_setup = Rc::clone(&app); // Клонируем Rc для использования в другом замыкании
     let exports: Dictionary =
-        Dictionary::from_iter::<[(&str, Function<Dictionary, Result<(), OxiError>>); 1]>([(
+        Dictionary::from_iter::<[(&str, Function<Dictionary, OxiResult<()>>); 1]>([(
             "setup",
             Function::from_fn(move |dict: Dictionary| -> OxiResult<()> {
-                match app_setup.lock() {
-                    Ok(mut app) => app.setup(dict),
-                    Err(e) => {
-                        err_writeln(&format!(
-                            "Failed to acquire lock on app during setup: {}",
-                            e
-                        ));
-                        Err(PluginError::Custom("Lock error during setup".into()).into())
-                    }
-                }
+                app_setup.borrow_mut().setup(dict)?;
+                Ok(())
             }),
         )]);
 
