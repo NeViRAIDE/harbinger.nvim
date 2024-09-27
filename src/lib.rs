@@ -10,6 +10,7 @@ use nvim_oxi::{
 };
 
 use core::Dashboard;
+use error::handle_error;
 use setup::Config;
 
 mod buffer;
@@ -33,9 +34,10 @@ fn harbinger() -> OxiResult<Dictionary> {
 
     let app_handle = Rc::clone(&app);
     let open_or_close_dashboard = move |_: CommandArgs| {
-        if let Err(e) = app_handle.borrow_mut().toggle_dashboard() {
-            err_writeln(&format!("Error toggling dashboard: {}", e));
-        }
+        let result = app_handle.borrow_mut().toggle_dashboard();
+        handle_error(result, "Error toggling dashboard").unwrap_or_else(|e| {
+            err_writeln(&format!("Failed to toggle dashboard: {}", e));
+        });
     };
 
     create_user_command("Harbinger", open_or_close_dashboard, &opts)?;
@@ -45,7 +47,7 @@ fn harbinger() -> OxiResult<Dictionary> {
         Dictionary::from_iter::<[(&str, Function<Dictionary, OxiResult<()>>); 1]>([(
             "setup",
             Function::from_fn(move |dict: Dictionary| -> OxiResult<()> {
-                app_setup.borrow_mut().setup(dict)?;
+                handle_error(app_setup.borrow_mut().setup(dict), "Failed to setup app")?;
                 Ok(())
             }),
         )]);
