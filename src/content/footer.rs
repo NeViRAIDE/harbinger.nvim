@@ -14,11 +14,10 @@ impl Footer {
 
 impl DashboardElement for Footer {
     fn render(&self) -> String {
-        format!("{}", self.text)
+        format!("\n{}", self.text)
     }
 }
 
-// Функция для создания футера
-pub fn create_footer() -> Box<dyn DashboardElement> {
-    Box::new(Footer::new("Neovim 0.5.1"))
+pub fn create_footer(content: &str) -> Box<dyn DashboardElement> {
+    Box::new(Footer::new(content))
 }

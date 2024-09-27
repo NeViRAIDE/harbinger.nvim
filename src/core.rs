@@ -8,21 +8,42 @@ use nvim_oxi::{
     Dictionary, Result as OxiResult,
 };
 
-use crate::buffer::BufferManager;
-use crate::setup::Config;
+use crate::{
+    buffer::BufferManager,
+    content::{
+        button::create_buttons,
+        footer::create_footer,
+        header::{create_header, create_subheader},
+        Content,
+    },
+    setup::Config,
+};
 
-#[derive(Debug)]
 pub struct Dashboard {
     pub config: Config,
+    pub content: Content,
 }
 
 impl Dashboard {
     pub fn new(config: Config) -> Self {
-        Dashboard { config }
+        Dashboard {
+            config,
+            content: Content::new(),
+        }
     }
 
     pub fn setup(&mut self, dict: Dictionary) -> OxiResult<()> {
         self.config = Config::from_dict(dict);
+
+        self.content = Content::new();
+
+        self.content.add_element(create_header(&self.config.header));
+        self.content
+            .add_element(create_subheader(&self.config.sub_header));
+        for button in create_buttons() {
+            self.content.add_element(button);
+        }
+        self.content.add_element(create_footer(&self.config.footer));
 
         set_keymap(
             Mode::Normal,
@@ -58,7 +79,7 @@ impl Dashboard {
                 Ok(mut buf) => {
                     set_current_buf(&buf)?;
 
-                    let dashboard_content = crate::content::generate_dashboard_content();
+                    let dashboard_content = self.content.render();
 
                     BufferManager::set_buffer_content(&mut buf, &dashboard_content.join("\n"))?;
                     BufferManager::configure_buffer()?;

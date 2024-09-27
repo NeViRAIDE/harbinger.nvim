@@ -18,11 +18,10 @@ impl DashboardElement for Header {
     }
 }
 
-// Функции для создания заголовков
-pub fn create_header() -> Box<dyn DashboardElement> {
-    Box::new(Header::new("Welcome to Neovim!"))
+pub fn create_header(content: &str) -> Box<dyn DashboardElement> {
+    Box::new(Header::new(content))
 }
 
-pub fn create_subheader() -> Box<dyn DashboardElement> {
-    Box::new(Header::new("==================="))
+pub fn create_subheader(content: &str) -> Box<dyn DashboardElement> {
+    Box::new(Header::new(content))
 }
