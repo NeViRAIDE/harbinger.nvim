@@ -4,12 +4,14 @@ use nvim_oxi::{
         opts::{CreateAutocmdOpts, OptionOpts, OptionScope},
         set_current_buf, set_keymap,
         types::Mode,
+        Buffer,
     },
     Dictionary, Result as OxiResult,
 };
 
 use crate::{
     buffer::BufferManager,
+    config::Config,
     content::{
         button::create_buttons,
         footer::create_footer,
@@ -17,7 +19,6 @@ use crate::{
         Content,
     },
     error::{handle_error, PluginError},
-    setup::Config,
 };
 
 pub struct Dashboard {
@@ -114,10 +115,7 @@ impl Dashboard {
         Ok(())
     }
 
-    fn create_autocmd_for_buffer_deletion(
-        &self,
-        buf: nvim_oxi::api::Buffer,
-    ) -> Result<(), PluginError> {
+    fn create_autocmd_for_buffer_deletion(&self, buf: Buffer) -> Result<(), PluginError> {
         let autocmd_opts = CreateAutocmdOpts::builder()
             .buffer(buf.clone())
             .callback(move |_| {

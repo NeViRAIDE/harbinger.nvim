@@ -9,16 +9,16 @@ use nvim_oxi::{
     Dictionary, Function, Result as OxiResult,
 };
 
+use config::Config;
 use core::Dashboard;
 use error::handle_error;
-use setup::Config;
 
 mod buffer;
+mod config;
 mod content;
 mod core;
 mod defaults;
 mod error;
-mod setup;
 
 #[nvim_oxi::plugin]
 fn harbinger() -> OxiResult<Dictionary> {
