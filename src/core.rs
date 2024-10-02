@@ -97,7 +97,7 @@ impl Dashboard {
                     )?;
 
                     handle_error(
-                        BufferManager::configure_buffer(),
+                        BufferManager::configure_buffer(&mut buf),
                         "Failed to configure buffer",
                     )?;
 

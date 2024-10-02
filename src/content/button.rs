@@ -11,14 +11,14 @@ impl Button {
         Self {
             title: title.to_string(),
             icon: icon.to_string(),
-            command: command.to_string(),
+            command: format!("<cmd>{}<cr>", command),
         }
     }
 }
 
 impl DashboardElement for Button {
     fn render(&self) -> String {
-        format!("{} {}", self.icon, self.title)
+        format!(" {:<width$} {}", self.title, self.icon, width = 20)
     }
 }
 
