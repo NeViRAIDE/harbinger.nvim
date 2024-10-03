@@ -1,9 +1,14 @@
+use std::any::Any;
+
+use button::Button;
+
 pub mod button;
 pub mod footer;
 pub mod header;
 
 pub trait DashboardElement {
     fn render(&self) -> String;
+    fn as_any(&self) -> &dyn Any;
 }
 
 pub struct Content {
@@ -21,7 +26,29 @@ impl Content {
         self.elements.push(element);
     }
 
-    pub fn render(&self) -> Vec<String> {
-        self.elements.iter().map(|el| el.render()).collect()
+    pub fn render(&self) -> (Vec<String>, usize, usize) {
+        let mut lines = Vec::new();
+        let mut button_count = 0;
+        let mut button_line_index = 0;
+        let mut current_line_index = 0;
+
+        for element in self.elements.iter() {
+            let rendered = element.render();
+            let rendered_lines: Vec<&str> = rendered.split('\n').collect();
+
+            for line in &rendered_lines {
+                lines.push(line.to_string());
+                current_line_index += 1;
+            }
+
+            if element.as_any().is::<Button>() {
+                button_count += 1;
+                if button_count == 1 {
+                    button_line_index = current_line_index + 1;
+                }
+            }
+        }
+
+        (lines, button_count, button_line_index)
     }
 }

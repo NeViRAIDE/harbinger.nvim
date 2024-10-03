@@ -1,6 +1,7 @@
 use nvim_oxi::{
     api::{
-        create_autocmd, create_buf, err_writeln, get_current_buf, get_option_value, list_bufs,
+        create_autocmd, create_buf, err_writeln, get_current_buf, get_current_win,
+        get_option_value, list_bufs,
         opts::{CreateAutocmdOpts, OptionOpts, OptionScope},
         set_current_buf, set_keymap,
         types::Mode,
@@ -60,7 +61,7 @@ impl Dashboard {
         Ok(())
     }
 
-    pub fn toggle_dashboard(&self) -> Result<(), PluginError> {
+    pub fn toggle_dashboard(&mut self) -> Result<(), PluginError> {
         let current_buf = get_current_buf();
         let buf_opts = OptionOpts::builder().scope(OptionScope::Local).build();
         let filetype: String = handle_error(
@@ -90,7 +91,7 @@ impl Dashboard {
                 Ok(mut buf) => {
                     handle_error(set_current_buf(&buf), "Failed to set current buffer")?;
 
-                    let dashboard_content = self.content.render();
+                    let (dashboard_content, button_count, button_index) = self.content.render();
                     handle_error(
                         BufferManager::set_buffer_content(&mut buf, &dashboard_content.join("\n")),
                         "Failed to set buffer content",
@@ -99,6 +100,11 @@ impl Dashboard {
                     handle_error(
                         BufferManager::configure_buffer(&mut buf),
                         "Failed to configure buffer",
+                    )?;
+
+                    handle_error(
+                        get_current_win().set_cursor(button_index - 1, 0),
+                        "Failed to set cursor position",
                     )?;
 
                     self.create_autocmd_for_buffer_deletion(buf)?;

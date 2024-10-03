@@ -1,3 +1,5 @@
+use std::any::Any;
+
 use super::DashboardElement;
 
 pub struct Header {
@@ -14,7 +16,11 @@ impl Header {
 
 impl DashboardElement for Header {
     fn render(&self) -> String {
-        format!("{}", self.text)
+        format!("{}\n", self.text)
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 }
 

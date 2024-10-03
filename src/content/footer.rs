@@ -1,3 +1,5 @@
+use std::any::Any;
+
 use super::DashboardElement;
 
 pub struct Footer {
@@ -15,6 +17,10 @@ impl Footer {
 impl DashboardElement for Footer {
     fn render(&self) -> String {
         format!("\n{}", self.text)
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 }
 

@@ -1,3 +1,5 @@
+use std::any::Any;
+
 use super::DashboardElement;
 
 pub struct Button {
@@ -20,9 +22,12 @@ impl DashboardElement for Button {
     fn render(&self) -> String {
         format!(" {:<width$} {}", self.title, self.icon, width = 20)
     }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
 }
 
-// Функция для создания набора кнопок и возврата их в виде вектора элементов
 pub fn create_buttons() -> Vec<Box<dyn DashboardElement>> {
     vec![
         Box::new(Button::new("Create new file", "", "new_file_command")),

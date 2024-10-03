@@ -1,3 +1,4 @@
+use nvim_oxi::Object;
 use nvim_oxi::{conversion::FromObject, Dictionary};
 
 use crate::defaults::{DEFAULT_FOOTER, DEFAULT_HEADER, DEFAULT_KEYMAP, DEFAULT_SUB_HEADER};
@@ -19,16 +20,33 @@ impl Config {
                 .unwrap_or_else(|| DEFAULT_KEYMAP.to_string()),
             header: options
                 .get("header")
-                .and_then(|header_obj| String::from_object(header_obj.clone()).ok())
+                .and_then(Self::parse_string_or_array)
                 .unwrap_or_else(|| DEFAULT_HEADER.to_string()),
+
             sub_header: options
                 .get("sub_header")
-                .and_then(|sub_header_obj| String::from_object(sub_header_obj.clone()).ok())
+                .and_then(Self::parse_string_or_array)
                 .unwrap_or_else(|| DEFAULT_SUB_HEADER.to_string()),
+
             footer: options
                 .get("footer")
-                .and_then(|footer_obj| String::from_object(footer_obj.clone()).ok())
+                .and_then(Self::parse_string_or_array)
                 .unwrap_or_else(|| DEFAULT_FOOTER.to_string()),
+        }
+    }
+
+    fn parse_string_or_array(obj: &Object) -> Option<String> {
+        if let Ok(string_value) = String::from_object(obj.clone()) {
+            Some(string_value)
+        } else if let Ok(array) = Vec::<Object>::from_object(obj.clone()) {
+            let joined = array
+                .into_iter()
+                .filter_map(|item| String::from_object(item).ok())
+                .collect::<Vec<String>>()
+                .join("\n");
+            Some(joined)
+        } else {
+            None
         }
     }
 }
