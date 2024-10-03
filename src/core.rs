@@ -46,7 +46,7 @@ impl Dashboard {
             &self.config.sub_header,
             &self.config.sub_header_pos,
         ));
-        for button in create_buttons() {
+        for button in create_buttons(&self.config.buttons, &self.config.buttons_pos) {
             self.content.add_element(button);
         }
         self.content
@@ -113,7 +113,6 @@ impl Dashboard {
                             get_current_win().get_height(),
                             "Failed to get window height",
                         )?,
-                        handle_error(get_current_win().get_width(), "Failed to get window width")?,
                         dashboard_content.len(),
                         dashboard_content
                             .iter()

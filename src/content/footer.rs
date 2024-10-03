@@ -20,26 +20,22 @@ impl Footer {
 
 impl DashboardElement for Footer {
     fn render(&self) -> String {
-        // Используем handle_error для обработки ошибки получения размеров окна
         let (win_width, _) =
-            handle_error(get_window_size(), "Failed to get window size").unwrap_or((80, 0)); // В случае ошибки используем ширину по умолчанию 80
+            handle_error(get_window_size(), "Failed to get window size").unwrap_or((80, 0));
 
-        // Выравнивание текста в зависимости от заданного положения
         let formatted_text = match self.alignment {
-            ElementAlignment::Left => self.text.to_string(), // Слева без изменений
+            ElementAlignment::Left => self.text.to_string(),
             ElementAlignment::Center => {
                 let padding = (win_width.saturating_sub(self.text.len())) / 2;
-                format!("{:width$}", self.text, width = padding + self.text.len())
-                // Центрирование
+                format!("{:padding$}{}", "", self.text, padding = padding)
             }
             ElementAlignment::Right => {
                 let padding = win_width.saturating_sub(self.text.len());
-                format!("{:width$}", self.text, width = padding + self.text.len())
-                // Справа
+                format!("{:padding$}{}", "", self.text, padding = padding)
             }
         };
 
-        format!("\n{}", formatted_text) // Возвращаем результат с переносом строки
+        format!("{}\n", formatted_text)
     }
 
     fn alignment(&self) -> ElementAlignment {

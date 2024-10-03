@@ -28,11 +28,11 @@ impl DashboardElement for Header {
             ElementAlignment::Left => self.text.to_string(),
             ElementAlignment::Center => {
                 let padding = (win_width.saturating_sub(self.text.len())) / 2;
-                format!("{:width$}", self.text, width = padding + self.text.len())
+                format!("{:padding$}{}", "", self.text, padding = padding)
             }
             ElementAlignment::Right => {
                 let padding = win_width.saturating_sub(self.text.len());
-                format!("{:width$}", self.text, width = padding + self.text.len())
+                format!("{:padding$}{}", "", self.text, padding = padding)
             }
         };
         format!("{}\n", formatted_text)

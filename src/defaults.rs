@@ -8,3 +8,10 @@ pub const DEFAULT_SUB_HEADER_POS: &str = "center";
 
 pub const DEFAULT_FOOTER: &str = "created with Rust by RAprogramm";
 pub const DEFAULT_FOOTER_POS: &str = "center";
+
+pub const DEFAULT_BUTTONS: &[(&str, &str, &str)] = &[
+    ("Create new file", "", "new_file_command"),
+    ("Find file", "", "Telescope find_files"),
+    ("Recent files", "", "Telescope oldfiles"),
+];
+pub const DEFAULT_BUTTONS_POS: &str = "center";

@@ -3,6 +3,8 @@ use std::fmt::{Display, Formatter, Result as FmtResult};
 
 use button::Button;
 
+use self::button::ButtonGroup;
+
 pub mod button;
 pub mod footer;
 pub mod header;
@@ -60,7 +62,12 @@ impl Content {
                 current_line_index += 1;
             }
 
-            if element.as_any().is::<Button>() {
+            if let Some(button_group) = element.as_any().downcast_ref::<ButtonGroup>() {
+                button_count += button_group.buttons.len();
+                if first_button_line_index.is_none() {
+                    first_button_line_index = Some(current_line_index);
+                }
+            } else if element.as_any().is::<Button>() {
                 button_count += 1;
                 if first_button_line_index.is_none() {
                     first_button_line_index = Some(current_line_index);
