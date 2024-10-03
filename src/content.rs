@@ -29,7 +29,7 @@ impl Content {
     pub fn render(&self) -> (Vec<String>, usize, usize) {
         let mut lines = Vec::new();
         let mut button_count = 0;
-        let mut button_line_index = 0;
+        let mut first_button_line_index = None;
         let mut current_line_index = 0;
 
         for element in self.elements.iter() {
@@ -43,12 +43,12 @@ impl Content {
 
             if element.as_any().is::<Button>() {
                 button_count += 1;
-                if button_count == 1 {
-                    button_line_index = current_line_index + 1;
+                if first_button_line_index.is_none() {
+                    first_button_line_index = Some(current_line_index);
                 }
             }
         }
 
-        (lines, button_count, button_line_index)
+        (lines, button_count, first_button_line_index.unwrap_or(0))
     }
 }

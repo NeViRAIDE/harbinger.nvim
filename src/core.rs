@@ -91,19 +91,32 @@ impl Dashboard {
                 Ok(mut buf) => {
                     handle_error(set_current_buf(&buf), "Failed to set current buffer")?;
 
-                    let (dashboard_content, button_count, button_index) = self.content.render();
+                    let (dashboard_content, button_count, first_button_index) =
+                        self.content.render();
                     handle_error(
                         BufferManager::set_buffer_content(&mut buf, &dashboard_content.join("\n")),
                         "Failed to set buffer content",
                     )?;
 
+                    if button_count == 0 {
+                        return Err(PluginError::Custom(
+                            "No buttons found for keybinds".to_string(),
+                        ));
+                    }
+
+                    let last_button_index = first_button_index + button_count - 1;
+
                     handle_error(
-                        BufferManager::configure_buffer(&mut buf),
+                        BufferManager::configure_buffer(
+                            &mut buf,
+                            first_button_index,
+                            last_button_index,
+                        ),
                         "Failed to configure buffer",
                     )?;
 
                     handle_error(
-                        get_current_win().set_cursor(button_index - 1, 0),
+                        get_current_win().set_cursor(first_button_index, 0),
                         "Failed to set cursor position",
                     )?;
 

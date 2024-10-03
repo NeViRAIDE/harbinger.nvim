@@ -1,20 +1,27 @@
 use nvim_oxi::{
     api::{
         opts::{BufDeleteOpts, OptionOpts, OptionScope},
-        set_option_value,
-        types::Mode,
-        Buffer,
+        set_option_value, Buffer,
     },
     Object, Result as OxiResult,
 };
 
 use crate::error::handle_error;
 
+use keymap::KeymapManager;
+
+mod keymap;
+
 pub struct BufferManager;
+
+struct BufferOption<'a> {
+    name: &'a str,
+    value: Object,
+}
 
 impl BufferManager {
     pub fn set_buffer_content(buf: &mut Buffer, content: &str) -> OxiResult<()> {
-        let lines: Vec<String> = content.lines().map(|s| s.to_string()).collect();
+        let lines: Vec<String> = content.lines().map(String::from).collect();
         handle_error(
             buf.set_lines(0.., true, lines),
             "Failed to set buffer lines",
@@ -22,41 +29,67 @@ impl BufferManager {
         Ok(())
     }
 
-    pub fn configure_buffer(buf: &mut Buffer) -> OxiResult<()> {
-        let buf_opts = OptionOpts::builder().scope(OptionScope::Local).build();
-
-        let options: Vec<(&str, Box<Object>)> = vec![
-            ("number", Box::new(false.into())),
-            ("relativenumber", Box::new(false.into())),
-            ("filetype", Box::new("harbinger".into())),
-            ("modifiable", Box::new(false.into())),
-            ("wrap", Box::new(false.into())),
-            ("spell", Box::new(false.into())),
-            ("list", Box::new(false.into())),
-            ("cursorcolumn", Box::new(false.into())),
-            ("swapfile", Box::new(false.into())),
-            ("matchpairs", Box::new("".into())),
-        ];
-
-        for (option, value) in options {
-            handle_error(
-                set_option_value(option, *value, &buf_opts),
-                &format!("Failed to set '{}' option", option),
-            )?;
-        }
-
-        Self::deactivate_keymaps(buf)?;
-
+    pub fn configure_buffer(
+        buf: &mut Buffer,
+        first_button_index: usize,
+        last_button_index: usize,
+    ) -> OxiResult<()> {
+        let options = Self::get_buffer_options();
+        Self::set_buffer_options(&options)?;
+        KeymapManager::deactivate_keymaps(buf)?;
+        KeymapManager::setup_keymaps(buf, first_button_index, last_button_index, 1)?;
         Ok(())
     }
 
-    fn deactivate_keymaps(buf: &mut Buffer) -> OxiResult<()> {
-        let keys = vec!["gg", "G", "l", "h", "<Left>", "<Right>"];
+    fn get_buffer_options() -> [BufferOption<'static>; 9] {
+        [
+            BufferOption {
+                name: "number",
+                value: Object::from(false),
+            },
+            BufferOption {
+                name: "relativenumber",
+                value: Object::from(false),
+            },
+            BufferOption {
+                name: "filetype",
+                value: Object::from("harbinger"),
+            },
+            BufferOption {
+                name: "modifiable",
+                value: Object::from(false),
+            },
+            BufferOption {
+                name: "wrap",
+                value: Object::from(false),
+            },
+            BufferOption {
+                name: "spell",
+                value: Object::from(false),
+            },
+            BufferOption {
+                name: "list",
+                value: Object::from(false),
+            },
+            BufferOption {
+                name: "cursorcolumn",
+                value: Object::from(false),
+            },
+            BufferOption {
+                name: "swapfile",
+                value: Object::from(false),
+            },
+        ]
+    }
 
-        for key in keys {
-            Buffer::set_keymap(buf, Mode::Normal, key, "", &Default::default())?;
+    fn set_buffer_options(options: &[BufferOption]) -> OxiResult<()> {
+        let buf_opts = OptionOpts::builder().scope(OptionScope::Local).build();
+        for option in options {
+            handle_error(
+                set_option_value(option.name, option.value.clone(), &buf_opts),
+                &format!("Failed to set '{}' option", option.name),
+            )?;
         }
-
         Ok(())
     }
 
