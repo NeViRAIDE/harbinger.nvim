@@ -1,4 +1,5 @@
 use std::any::Any;
+use std::fmt::{Display, Formatter, Result as FmtResult};
 
 use button::Button;
 
@@ -8,7 +9,25 @@ pub mod header;
 
 pub trait DashboardElement {
     fn render(&self) -> String;
+    fn alignment(&self) -> ElementAlignment;
     fn as_any(&self) -> &dyn Any;
+}
+
+#[derive(Clone)]
+pub enum ElementAlignment {
+    Left,
+    Center,
+    Right,
+}
+
+impl Display for ElementAlignment {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        match self {
+            ElementAlignment::Left => write!(f, "left"),
+            ElementAlignment::Center => write!(f, "center"),
+            ElementAlignment::Right => write!(f, "right"),
+        }
+    }
 }
 
 pub struct Content {

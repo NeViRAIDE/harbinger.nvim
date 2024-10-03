@@ -40,13 +40,17 @@ impl Dashboard {
 
         self.content = Content::new();
 
-        self.content.add_element(create_header(&self.config.header));
         self.content
-            .add_element(create_subheader(&self.config.sub_header));
+            .add_element(create_header(&self.config.header, &self.config.header_pos));
+        self.content.add_element(create_subheader(
+            &self.config.sub_header,
+            &self.config.sub_header_pos,
+        ));
         for button in create_buttons() {
             self.content.add_element(button);
         }
-        self.content.add_element(create_footer(&self.config.footer));
+        self.content
+            .add_element(create_footer(&self.config.footer, &self.config.footer_pos));
 
         handle_error(
             set_keymap(

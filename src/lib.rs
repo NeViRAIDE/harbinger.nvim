@@ -19,6 +19,7 @@ mod content;
 mod core;
 mod defaults;
 mod error;
+mod utils;
 
 #[nvim_oxi::plugin]
 fn harbinger() -> OxiResult<Dictionary> {
