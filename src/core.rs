@@ -104,6 +104,21 @@ impl Dashboard {
                         ));
                     }
 
+                    let row_offset = BufferManager::get_centered_position(
+                        handle_error(
+                            get_current_win().get_height(),
+                            "Failed to get window height",
+                        )?,
+                        handle_error(get_current_win().get_width(), "Failed to get window width")?,
+                        dashboard_content.len(),
+                        dashboard_content
+                            .iter()
+                            .map(|line| line.len())
+                            .max()
+                            .unwrap_or(0),
+                    )?
+                    .0;
+
                     let last_button_index = first_button_index + button_count - 1;
 
                     handle_error(
@@ -116,7 +131,7 @@ impl Dashboard {
                     )?;
 
                     handle_error(
-                        get_current_win().set_cursor(first_button_index, 0),
+                        get_current_win().set_cursor(first_button_index + row_offset, 0),
                         "Failed to set cursor position",
                     )?;
 
