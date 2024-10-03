@@ -18,6 +18,9 @@ jobs:
         uses: kdheepak/panvimdoc@main
         with:
           vimdoc: harbinger
+          version: "NVIM >= 0.10.0"
+          toc: true
+          treesitter: true
       - uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: 'chore(docs): auto generate vimdoc'
