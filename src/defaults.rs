@@ -13,5 +13,7 @@ pub const DEFAULT_BUTTONS: &[(&str, &str, &str)] = &[
     ("Create new file", "", "new_file_command"),
     ("Find file", "", "Telescope find_files"),
     ("Recent files", "", "Telescope oldfiles"),
+    ("Exit", "X", "qall"),
+    ("test1", "Xyi", "qall"),
 ];
 pub const DEFAULT_BUTTONS_POS: &str = "center";

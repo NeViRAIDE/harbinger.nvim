@@ -34,21 +34,62 @@ impl DashboardElement for ButtonGroup {
     fn render(&self) -> String {
         let (win_width, _) = get_window_size().unwrap_or((80, 0));
 
+        // Находим максимальную длину текста и максимальную длину иконок
+        let max_title_length = self
+            .buttons
+            .iter()
+            .map(|button| button.title.len())
+            .max()
+            .unwrap_or(20);
+
+        let max_icon_length = self
+            .buttons
+            .iter()
+            .map(|button| button.icon.len())
+            .max()
+            .unwrap_or(1);
+
+        // Считаем максимальную длину строки (текст + иконка + отступ)
+        let max_total_length = max_title_length + 5 + max_icon_length; // 5 пробелов между текстом и иконкой
+
         let mut rendered_buttons = String::new();
 
         for button in &self.buttons {
-            let button_text = format!(" {:<width$} {}", button.title, button.icon, width = 20);
+            // Рассчитываем отступ для текста
+            let title_padding = max_title_length.saturating_sub(button.title.len());
+
+            // Формируем строку с фиксированными отступами для текста и иконки
+            let button_text = format!(
+                " {}{:title_padding$}     {}",
+                button.title,
+                "",
+                button.icon,
+                title_padding = title_padding
+            );
+
+            // Применяем выравнивание кнопок по центру
             let aligned_button = match self.alignment {
                 ElementAlignment::Left => button_text,
                 ElementAlignment::Center => {
-                    let padding = (win_width.saturating_sub(button_text.len())) / 2;
-                    format!("{:padding$}{}", "", button_text, padding = padding)
+                    let space_padding = (win_width.saturating_sub(max_total_length)) / 2;
+                    format!(
+                        "{:space_padding$}{}",
+                        "",
+                        button_text,
+                        space_padding = space_padding
+                    )
                 }
                 ElementAlignment::Right => {
-                    let padding = win_width.saturating_sub(button_text.len());
-                    format!("{:padding$}{}", "", button_text, padding = padding)
+                    let space_padding = win_width.saturating_sub(max_total_length);
+                    format!(
+                        "{:space_padding$}{}",
+                        "",
+                        button_text,
+                        space_padding = space_padding
+                    )
                 }
             };
+
             rendered_buttons.push_str(&aligned_button);
             rendered_buttons.push('\n');
         }
