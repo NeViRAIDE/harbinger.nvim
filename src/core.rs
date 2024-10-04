@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use nvim_oxi::{
     api::{
         create_autocmd, create_buf, err_writeln, get_current_buf, get_current_win,
@@ -15,6 +17,7 @@ use crate::{
     config::Config,
     content::{
         button::create_buttons,
+        empty_line::EmptyLineElement,
         footer::create_footer,
         header::{create_header, create_subheader},
         Content,
@@ -42,13 +45,22 @@ impl Dashboard {
 
         self.content
             .add_element(create_header(&self.config.header, &self.config.header_pos));
+        // Add empty line after header
+        self.content.add_element(Box::new(EmptyLineElement));
+
         self.content.add_element(create_subheader(
             &self.config.sub_header,
             &self.config.sub_header_pos,
         ));
+        // Add empty line after subheader
+        self.content.add_element(Box::new(EmptyLineElement));
+
         for button in create_buttons(&self.config.buttons, &self.config.buttons_pos) {
             self.content.add_element(button);
         }
+        // Add empty line before footer
+        self.content.add_element(Box::new(EmptyLineElement));
+
         self.content
             .add_element(create_footer(&self.config.footer, &self.config.footer_pos));
 
@@ -95,22 +107,29 @@ impl Dashboard {
         let mut buf = create_buf(false, true)?;
         set_current_buf(&buf)?;
 
-        let (dashboard_content, button_count, first_button_index) = self.content.render();
-        BufferManager::set_buffer_content(&mut buf, &dashboard_content.join("\n"))?;
+        let (dashboard_content, button_count, first_button_line, command_mapping) =
+            self.content.render();
+        let command_mapping = Arc::new(command_mapping);
+
+        let top_padding =
+            BufferManager::set_buffer_content(&mut buf, &dashboard_content.join("\n"))?;
 
         if button_count == 0 {
             return Err(PluginError::Custom("No buttons found for keybinds".into()).into());
         }
 
-        let win_height = get_current_win().get_height()? as usize;
-        let content_height = dashboard_content.len();
-        let row_offset = BufferManager::get_centered_position(win_height as u32, content_height)?;
+        // Adjust first and last button lines to account for top padding
+        let adjusted_first_button_line = first_button_line + top_padding;
+        let last_button_line = adjusted_first_button_line + button_count - 1;
 
-        let last_button_index = first_button_index + button_count - 1;
+        get_current_win().set_cursor(adjusted_first_button_line, 0)?;
 
-        BufferManager::configure_buffer(&mut buf, first_button_index, last_button_index)?;
-
-        get_current_win().set_cursor(first_button_index + row_offset, 0)?;
+        BufferManager::configure_buffer(
+            &mut buf,
+            adjusted_first_button_line,
+            last_button_line,
+            Arc::clone(&command_mapping),
+        )?;
 
         self.create_autocmd_for_buffer_deletion(buf)
     }

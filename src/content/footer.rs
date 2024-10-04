@@ -1,4 +1,4 @@
-use super::{text_element::TextElement, DashboardElement, ElementAlignment};
+use super::{text::TextElement, DashboardElement, ElementAlignment};
 
 pub fn create_footer(content: &str, alignment: &str) -> Box<dyn DashboardElement> {
     let alignment_enum = match alignment {

@@ -1,3 +1,5 @@
+use std::{collections::HashMap, sync::Arc};
+
 use keymap::KeymapManager;
 use nvim_oxi::{
     api::{
@@ -13,7 +15,7 @@ mod keymap;
 pub struct BufferManager;
 
 impl BufferManager {
-    pub fn set_buffer_content(buf: &mut Buffer, content: &str) -> OxiResult<()> {
+    pub fn set_buffer_content(buf: &mut Buffer, content: &str) -> OxiResult<usize> {
         let lines: Vec<String> = content.lines().map(String::from).collect();
 
         let win = get_current_win();
@@ -28,18 +30,19 @@ impl BufferManager {
 
         buf.set_lines(0.., true, result)?;
 
-        Ok(())
+        Ok(row) // Return the number of top padding lines
     }
 
     pub fn configure_buffer(
         buf: &mut Buffer,
-        first_button_index: usize,
-        last_button_index: usize,
+        first_button_line: usize,
+        last_button_line: usize,
+        command_mapping: Arc<HashMap<usize, String>>,
     ) -> OxiResult<()> {
         let options = Self::get_buffer_options();
         Self::set_buffer_options(&options)?;
         KeymapManager::deactivate_keymaps(buf)?;
-        KeymapManager::setup_keymaps(buf, first_button_index, last_button_index, 1)?;
+        KeymapManager::setup_keymaps(buf, first_button_line, last_button_line, command_mapping)?;
         Ok(())
     }
 

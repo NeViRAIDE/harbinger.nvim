@@ -1,11 +1,13 @@
 use std::any::Any;
+use std::collections::HashMap;
 
 use button::ButtonGroup;
 
 pub mod button;
 pub mod footer;
 pub mod header;
-pub mod text_element;
+pub mod text;
+pub mod empty_line;
 
 pub trait DashboardElement {
     fn render(&self) -> String;
@@ -35,29 +37,43 @@ impl Content {
         self.elements.push(element);
     }
 
-    pub fn render(&self) -> (Vec<String>, usize, usize) {
+    pub fn render(&self) -> (Vec<String>, usize, usize, HashMap<usize, String>) {
         let mut lines = Vec::new();
         let mut button_count = 0;
-        let mut first_button_line_index = None;
-        let mut current_line_index = 0;
+        let mut first_button_line = None;
+        let mut current_line_number = 1; // Start from 1
+        let mut command_mapping = HashMap::new();
 
         for element in self.elements.iter() {
             let rendered = element.render();
-            let rendered_lines: Vec<&str> = rendered.split('\n').collect();
-
-            for line in &rendered_lines {
-                lines.push(line.to_string());
-                current_line_index += 1;
-            }
+            let rendered_lines: Vec<&str> = rendered.lines().collect();
 
             if let Some(button_group) = element.as_any().downcast_ref::<ButtonGroup>() {
+                if first_button_line.is_none() {
+                    first_button_line = Some(current_line_number);
+                }
                 button_count += button_group.buttons.len();
-                if first_button_line_index.is_none() {
-                    first_button_line_index = Some(current_line_index);
+
+                for (i, line) in rendered_lines.iter().enumerate() {
+                    lines.push(line.to_string());
+                    // Map the line number to the command
+                    command_mapping
+                        .insert(current_line_number, button_group.buttons[i].command.clone());
+                    current_line_number += 1;
+                }
+            } else {
+                for line in rendered_lines {
+                    lines.push(line.to_string());
+                    current_line_number += 1;
                 }
             }
         }
 
-        (lines, button_count, first_button_line_index.unwrap_or(0))
+        (
+            lines,
+            button_count,
+            first_button_line.unwrap_or(1),
+            command_mapping,
+        )
     }
 }
