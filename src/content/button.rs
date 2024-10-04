@@ -16,7 +16,7 @@ impl Button {
         Self {
             title: title.to_string(),
             icon: icon.to_string(),
-            command: format!("<cmd>{}<cr>", command),
+            command: command.to_string(),
         }
     }
 }

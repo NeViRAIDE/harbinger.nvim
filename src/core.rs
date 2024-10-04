@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{collections::HashMap, sync::Arc};
 
 use nvim_oxi::{
     api::{
@@ -109,7 +109,6 @@ impl Dashboard {
 
         let (dashboard_content, button_count, first_button_line, command_mapping) =
             self.content.render();
-        let command_mapping = Arc::new(command_mapping);
 
         let top_padding =
             BufferManager::set_buffer_content(&mut buf, &dashboard_content.join("\n"))?;
@@ -122,7 +121,27 @@ impl Dashboard {
         let adjusted_first_button_line = first_button_line + top_padding;
         let last_button_line = adjusted_first_button_line + button_count - 1;
 
+        // **Adjust the command_mapping line numbers**
+        let adjusted_command_mapping: HashMap<usize, String> = command_mapping
+            .into_iter()
+            .map(|(line, command)| (line + top_padding, command))
+            .collect();
+        let command_mapping = Arc::new(adjusted_command_mapping);
+
+        // Set the cursor line (line numbers are 1-based)
         get_current_win().set_cursor(adjusted_first_button_line, 0)?;
+
+        // Adjust the cursor column
+        let line_iter = buf.get_lines(
+            adjusted_first_button_line - 1..adjusted_first_button_line,
+            false,
+        )?;
+        let line_content: Vec<String> = line_iter.map(|s| s.to_string()).collect();
+
+        if let Some(line) = line_content.first() {
+            let col = line.chars().take_while(|c| c.is_whitespace()).count();
+            get_current_win().set_cursor(adjusted_first_button_line, col)?;
+        }
 
         BufferManager::configure_buffer(
             &mut buf,

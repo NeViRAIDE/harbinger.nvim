@@ -1,8 +1,8 @@
 use std::{collections::HashMap, sync::Arc};
 
 use nvim_oxi::{
-    api::{get_current_win, opts::SetKeymapOpts, types::Mode, Buffer},
-    Result as OxiResult,
+    api::{err_writeln, get_current_win, opts::SetKeymapOpts, types::Mode, Buffer},
+    Function, Result as OxiResult,
 };
 
 use crate::error::PluginError;
@@ -25,17 +25,22 @@ impl KeymapManager {
             "<CR>",
             "",
             &SetKeymapOpts::builder()
-                .callback({
+                .callback(Function::from_fn({
                     let command_mapping = Arc::clone(&command_mapping);
-                    move |_| -> Result<(), PluginError> {
+                    move |_| -> Result<(), nvim_oxi::Error> {
                         let win = get_current_win();
                         let (cur_line, _) = win.get_cursor()?;
                         if let Some(command) = command_mapping.get(&cur_line) {
-                            nvim_oxi::api::command(command)?;
+                            if let Err(e) = nvim_oxi::api::command(command) {
+                                err_writeln(&format!(
+                                    "Error executing command '{}': {}",
+                                    command, e
+                                ));
+                            }
                         }
                         Ok(())
                     }
-                })
+                }))
                 .build(),
         )?;
 
@@ -54,8 +59,9 @@ impl KeymapManager {
             key,
             "",
             &SetKeymapOpts::builder()
-                .callback({
-                    move |_| -> Result<(), PluginError> {
+                .callback(Function::from_fn({
+                    let buffer = buffer.clone();
+                    move |_| -> Result<(), nvim_oxi::Error> {
                         let mut win = get_current_win();
                         let (cur_line, _) = win.get_cursor()?;
                         let target_line = Self::move_cursor(
@@ -64,10 +70,21 @@ impl KeymapManager {
                             last_button_line,
                             direction,
                         );
-                        win.set_cursor(target_line, 0)?;
+
+                        // Adjust the cursor column
+                        let line_iter = buffer.get_lines(target_line - 1..target_line, false)?;
+                        let line_content: Vec<String> = line_iter.map(|s| s.to_string()).collect();
+
+                        let col = if let Some(line) = line_content.first() {
+                            line.chars().take_while(|c| c.is_whitespace()).count()
+                        } else {
+                            0
+                        };
+
+                        win.set_cursor(target_line, col)?;
                         Ok(())
                     }
-                })
+                }))
                 .build(),
         )?;
         Ok(())
