@@ -43,26 +43,30 @@ impl Dashboard {
 
         self.content = Content::new();
 
-        self.content
-            .add_element(create_header(&self.config.header, &self.config.header_pos));
+        self.content.add_element(create_header(
+            &self.config.header.text,
+            &self.config.header.position,
+        ));
         // Add empty line after header
         self.content.add_element(Box::new(EmptyLineElement));
 
         self.content.add_element(create_subheader(
-            &self.config.sub_header,
-            &self.config.sub_header_pos,
+            &self.config.sub_header.text,
+            &self.config.sub_header.position,
         ));
         // Add empty line after subheader
         self.content.add_element(Box::new(EmptyLineElement));
 
-        for button in create_buttons(&self.config.buttons, &self.config.buttons_pos) {
+        for button in create_buttons(&self.config.buttons.items, &self.config.buttons.position) {
             self.content.add_element(button);
         }
         // Add empty line before footer
         self.content.add_element(Box::new(EmptyLineElement));
 
-        self.content
-            .add_element(create_footer(&self.config.footer, &self.config.footer_pos));
+        self.content.add_element(create_footer(
+            &self.config.footer.text,
+            &self.config.footer.position,
+        ));
 
         set_keymap(
             Mode::Normal,

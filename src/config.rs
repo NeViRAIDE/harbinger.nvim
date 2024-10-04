@@ -1,111 +1,150 @@
 use nvim_oxi::{conversion::FromObject, Dictionary, Object};
 
 use crate::defaults::{
-    DEFAULT_BUTTONS, DEFAULT_BUTTONS_POS, DEFAULT_FOOTER, DEFAULT_FOOTER_POS, DEFAULT_HEADER,
-    DEFAULT_HEADER_POS, DEFAULT_KEYMAP, DEFAULT_SUB_HEADER, DEFAULT_SUB_HEADER_POS,
+    DEFAULT_BUTTONS_ITEMS, DEFAULT_BUTTONS_POSITION, DEFAULT_FOOTER_POSITION, DEFAULT_FOOTER_TEXT,
+    DEFAULT_HEADER_POSITION, DEFAULT_HEADER_TEXT, DEFAULT_KEYMAP, DEFAULT_SUB_HEADER_POSITION,
+    DEFAULT_SUB_HEADER_TEXT,
 };
 
 #[derive(Debug, Default)]
 pub struct Config {
     pub keymap: String,
-    pub header: String,
-    pub header_pos: String,
-    pub sub_header: String,
-    pub sub_header_pos: String,
-    pub footer: String,
-    pub footer_pos: String,
-    pub buttons: Vec<(String, String, String)>,
-    pub buttons_pos: String,
+    pub header: TextPosition,
+    pub sub_header: TextPosition,
+    pub footer: TextPosition,
+    pub buttons: ButtonsConfig,
+}
+
+#[derive(Debug, Default)]
+pub struct TextPosition {
+    pub text: String,
+    pub position: String,
+}
+
+#[derive(Debug, Default)]
+pub struct ButtonsConfig {
+    pub items: Vec<(String, String, String)>,
+    pub position: String,
 }
 
 impl Config {
     pub fn from_dict(options: Dictionary) -> Self {
-        Config {
-            keymap: options
-                .get("keymap")
-                .and_then(|keymap_obj| String::from_object(keymap_obj.clone()).ok())
-                .unwrap_or_else(|| DEFAULT_KEYMAP.to_string()),
-
-            header: options
-                .get("header")
-                .and_then(Self::parse_string_or_array)
-                .unwrap_or_else(|| DEFAULT_HEADER.to_string()),
-            header_pos: options
-                .get("header_pos")
-                .and_then(|header_pos_obj| String::from_object(header_pos_obj.clone()).ok())
-                .unwrap_or_else(|| DEFAULT_HEADER_POS.to_string()),
-
-            sub_header: options
-                .get("sub_header")
-                .and_then(Self::parse_string_or_array)
-                .unwrap_or_else(|| DEFAULT_SUB_HEADER.to_string()),
-            sub_header_pos: options
-                .get("sub_header_pos")
-                .and_then(|sub_header_pos_obj| String::from_object(sub_header_pos_obj.clone()).ok())
-                .unwrap_or_else(|| DEFAULT_SUB_HEADER_POS.to_string()),
-
-            footer: options
-                .get("footer")
-                .and_then(Self::parse_string_or_array)
-                .unwrap_or_else(|| DEFAULT_FOOTER.to_string()),
-            footer_pos: options
-                .get("footer_pos")
-                .and_then(|footer_pos_obj| String::from_object(footer_pos_obj.clone()).ok())
-                .unwrap_or_else(|| DEFAULT_FOOTER_POS.to_string()),
-
-            buttons: options
-                .get("buttons")
-                .and_then(Self::parse_buttons)
-                .unwrap_or_else(|| {
-                    DEFAULT_BUTTONS
-                        .iter()
-                        .map(|(title, icon, command)| {
-                            (title.to_string(), icon.to_string(), command.to_string())
-                        })
-                        .collect()
-                }),
-            buttons_pos: options
-                .get("buttons_pos")
-                .and_then(|buttons_pos_obj| String::from_object(buttons_pos_obj.clone()).ok())
-                .unwrap_or_else(|| DEFAULT_BUTTONS_POS.to_string()),
+        Self {
+            keymap: parse_string_option(&options, "keymap", DEFAULT_KEYMAP),
+            header: parse_text_position_option(
+                &options,
+                "header",
+                DEFAULT_HEADER_TEXT,
+                DEFAULT_HEADER_POSITION,
+            ),
+            sub_header: parse_text_position_option(
+                &options,
+                "sub_header",
+                DEFAULT_SUB_HEADER_TEXT,
+                DEFAULT_SUB_HEADER_POSITION,
+            ),
+            footer: parse_text_position_option(
+                &options,
+                "footer",
+                DEFAULT_FOOTER_TEXT,
+                DEFAULT_FOOTER_POSITION,
+            ),
+            buttons: parse_buttons_config(&options),
         }
     }
+}
 
-    fn parse_string_or_array(obj: &Object) -> Option<String> {
-        if let Ok(string_value) = String::from_object(obj.clone()) {
-            Some(string_value)
-        } else if let Ok(array) = Vec::<Object>::from_object(obj.clone()) {
-            let joined = array
-                .into_iter()
-                .filter_map(|item| String::from_object(item).ok())
-                .collect::<Vec<String>>()
-                .join("\n");
-            Some(joined)
+fn parse_string_option(options: &Dictionary, key: &str, default: &str) -> String {
+    options
+        .get(key)
+        .and_then(|obj| String::from_object(obj.clone()).ok())
+        .unwrap_or_else(|| default.to_string())
+}
+
+fn parse_text_position_option(
+    options: &Dictionary,
+    key: &str,
+    default_text: &str,
+    default_position: &str,
+) -> TextPosition {
+    if let Some(obj) = options.get(key) {
+        if let Ok(dict) = Dictionary::from_object(obj.clone()) {
+            let text = parse_string_in_dict(&dict, "text", default_text);
+            let position = parse_string_in_dict(&dict, "position", default_position);
+            TextPosition { text, position }
         } else {
-            None
+            TextPosition {
+                text: default_text.to_string(),
+                position: default_position.to_string(),
+            }
+        }
+    } else {
+        TextPosition {
+            text: default_text.to_string(),
+            position: default_position.to_string(),
         }
     }
+}
 
-    fn parse_buttons(obj: &Object) -> Option<Vec<(String, String, String)>> {
-        if let Ok(buttons_array) = Vec::<Object>::from_object(obj.clone()) {
-            Some(
-                buttons_array
-                    .into_iter()
-                    .filter_map(|button_obj| {
-                        if let Ok(button) = Vec::<Object>::from_object(button_obj) {
-                            if button.len() == 3 {
-                                let title = String::from_object(button[0].clone()).ok()?;
-                                let icon = String::from_object(button[1].clone()).ok()?;
-                                let command = String::from_object(button[2].clone()).ok()?;
-                                return Some((title, icon, command));
-                            }
-                        }
-                        None
-                    })
+fn parse_string_in_dict(dict: &Dictionary, key: &str, default: &str) -> String {
+    dict.get(key)
+        .and_then(|obj| String::from_object(obj.clone()).ok())
+        .unwrap_or_else(|| default.to_string())
+}
+
+fn parse_buttons_config(options: &Dictionary) -> ButtonsConfig {
+    if let Some(obj) = options.get("buttons") {
+        if let Ok(dict) = Dictionary::from_object(obj.clone()) {
+            let items = parse_buttons_items(&dict);
+            let position = parse_string_in_dict(&dict, "position", DEFAULT_BUTTONS_POSITION);
+            ButtonsConfig { items, position }
+        } else {
+            ButtonsConfig {
+                items: DEFAULT_BUTTONS_ITEMS
+                    .iter()
+                    .map(|(t, i, c)| (t.to_string(), i.to_string(), c.to_string()))
                     .collect(),
-            )
-        } else {
-            None
+                position: DEFAULT_BUTTONS_POSITION.to_string(),
+            }
         }
+    } else {
+        ButtonsConfig {
+            items: DEFAULT_BUTTONS_ITEMS
+                .iter()
+                .map(|(t, i, c)| (t.to_string(), i.to_string(), c.to_string()))
+                .collect(),
+            position: DEFAULT_BUTTONS_POSITION.to_string(),
+        }
+    }
+}
+
+fn parse_buttons_items(dict: &Dictionary) -> Vec<(String, String, String)> {
+    if let Some(obj) = dict.get("items") {
+        if let Ok(buttons_array) = Vec::<Object>::from_object(obj.clone()) {
+            buttons_array
+                .into_iter()
+                .filter_map(|button_obj| {
+                    if let Ok(button) = Vec::<Object>::from_object(button_obj) {
+                        if button.len() == 3 {
+                            let title = String::from_object(button[0].clone()).ok()?;
+                            let icon = String::from_object(button[1].clone()).ok()?;
+                            let command = String::from_object(button[2].clone()).ok()?;
+                            return Some((title, icon, command));
+                        }
+                    }
+                    None
+                })
+                .collect()
+        } else {
+            DEFAULT_BUTTONS_ITEMS
+                .iter()
+                .map(|(t, i, c)| (t.to_string(), i.to_string(), c.to_string()))
+                .collect()
+        }
+    } else {
+        DEFAULT_BUTTONS_ITEMS
+            .iter()
+            .map(|(t, i, c)| (t.to_string(), i.to_string(), c.to_string()))
+            .collect()
     }
 }
