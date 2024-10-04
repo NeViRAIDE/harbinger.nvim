@@ -1,12 +1,14 @@
 use std::any::Any;
 
+use unicode_width::UnicodeWidthStr;
+
 use super::{DashboardElement, ElementAlignment};
 use crate::utils::get_window_size;
 
 pub struct Button {
-    title: String,
-    icon: String,
-    command: String,
+    pub title: String,
+    pub icon: String,
+    pub command: String,
 }
 
 impl Button {
@@ -34,59 +36,51 @@ impl DashboardElement for ButtonGroup {
     fn render(&self) -> String {
         let (win_width, _) = get_window_size().unwrap_or((80, 0));
 
-        // Находим максимальную длину текста и максимальную длину иконок
+        // Find the maximum lengths of titles and icons, accounting for Unicode widths
         let max_title_length = self
             .buttons
             .iter()
-            .map(|button| button.title.len())
+            .map(|button| UnicodeWidthStr::width(button.title.as_str()))
             .max()
-            .unwrap_or(20);
+            .unwrap_or(0);
 
         let max_icon_length = self
             .buttons
             .iter()
-            .map(|button| button.icon.len())
+            .map(|button| UnicodeWidthStr::width(button.icon.as_str()))
             .max()
-            .unwrap_or(1);
+            .unwrap_or(0);
 
-        // Считаем максимальную длину строки (текст + иконка + отступ)
-        let max_total_length = max_title_length + 5 + max_icon_length; // 5 пробелов между текстом и иконкой
+        // Define the spacing between title and icon
+        let spacing = 5;
+
+        // Calculate the maximum total length of a button line
+        let max_total_length = 1 + 1 + max_title_length + spacing + max_icon_length;
 
         let mut rendered_buttons = String::new();
 
         for button in &self.buttons {
-            // Рассчитываем отступ для текста
-            let title_padding = max_title_length.saturating_sub(button.title.len());
-
-            // Формируем строку с фиксированными отступами для текста и иконки
+            // Format the title and icon with fixed widths
             let button_text = format!(
-                " {}{:title_padding$}     {}",
+                " {:<title_width$}{spacing}{:<icon_width$}",
                 button.title,
-                "",
                 button.icon,
-                title_padding = title_padding
+                title_width = max_title_length,
+                icon_width = max_icon_length,
+                spacing = " ".repeat(spacing)
             );
 
-            // Применяем выравнивание кнопок по центру
+            // Apply alignment to the entire button text
             let aligned_button = match self.alignment {
-                ElementAlignment::Left => button_text,
+                ElementAlignment::Left => button_text.clone(),
                 ElementAlignment::Center => {
-                    let space_padding = (win_width.saturating_sub(max_total_length)) / 2;
-                    format!(
-                        "{:space_padding$}{}",
-                        "",
-                        button_text,
-                        space_padding = space_padding
-                    )
+                    let total_padding = win_width.saturating_sub(max_total_length);
+                    let left_padding = total_padding / 2;
+                    format!("{:space$}{}", "", button_text, space = left_padding)
                 }
                 ElementAlignment::Right => {
-                    let space_padding = win_width.saturating_sub(max_total_length);
-                    format!(
-                        "{:space_padding$}{}",
-                        "",
-                        button_text,
-                        space_padding = space_padding
-                    )
+                    let total_padding = win_width.saturating_sub(max_total_length);
+                    format!("{:space$}{}", "", button_text, space = total_padding)
                 }
             };
 

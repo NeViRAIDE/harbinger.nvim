@@ -1,13 +1,11 @@
 use std::any::Any;
-use std::fmt::{Display, Formatter, Result as FmtResult};
 
-use button::Button;
-
-use self::button::ButtonGroup;
+use button::ButtonGroup;
 
 pub mod button;
 pub mod footer;
 pub mod header;
+pub mod text_element;
 
 pub trait DashboardElement {
     fn render(&self) -> String;
@@ -20,16 +18,6 @@ pub enum ElementAlignment {
     Left,
     Center,
     Right,
-}
-
-impl Display for ElementAlignment {
-    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-        match self {
-            ElementAlignment::Left => write!(f, "left"),
-            ElementAlignment::Center => write!(f, "center"),
-            ElementAlignment::Right => write!(f, "right"),
-        }
-    }
 }
 
 pub struct Content {
@@ -64,11 +52,6 @@ impl Content {
 
             if let Some(button_group) = element.as_any().downcast_ref::<ButtonGroup>() {
                 button_count += button_group.buttons.len();
-                if first_button_line_index.is_none() {
-                    first_button_line_index = Some(current_line_index);
-                }
-            } else if element.as_any().is::<Button>() {
-                button_count += 1;
                 if first_button_line_index.is_none() {
                     first_button_line_index = Some(current_line_index);
                 }
