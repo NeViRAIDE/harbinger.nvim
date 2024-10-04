@@ -19,7 +19,7 @@ use crate::{
         header::{create_header, create_subheader},
         Content,
     },
-    error::{handle_error, PluginError},
+    error::PluginError,
 };
 
 pub struct Dashboard {
@@ -52,121 +52,83 @@ impl Dashboard {
         self.content
             .add_element(create_footer(&self.config.footer, &self.config.footer_pos));
 
-        handle_error(
-            set_keymap(
-                Mode::Normal,
-                &self.config.keymap,
-                "<cmd>Harbinger<cr>",
-                &Default::default(),
-            ),
-            "Failed to set keymap",
+        set_keymap(
+            Mode::Normal,
+            &self.config.keymap,
+            "<cmd>Harbinger<cr>",
+            &Default::default(),
         )?;
 
         Ok(())
     }
 
-    pub fn toggle_dashboard(&mut self) -> Result<(), PluginError> {
+    pub fn toggle_dashboard(&mut self) -> OxiResult<()> {
         let current_buf = get_current_buf();
         let buf_opts = OptionOpts::builder().scope(OptionScope::Local).build();
-        let filetype: String = handle_error(
-            get_option_value("filetype", &buf_opts),
-            "Failed to get filetype",
-        )?;
+        let filetype: String = get_option_value("filetype", &buf_opts)?;
 
         if filetype == "harbinger" {
-            let alternate_buf = list_bufs().find(|b| *b != current_buf && b.is_valid());
-
-            if let Some(alternate_buf) = alternate_buf {
-                handle_error(set_current_buf(&alternate_buf), "Failed to switch buffer")?;
-            } else {
-                let temp_buf =
-                    handle_error(create_buf(false, true), "Failed to create temporary buffer")?;
-                handle_error(set_current_buf(&temp_buf), "Failed to set temporary buffer")?;
-            }
-
-            if current_buf.is_valid() {
-                handle_error(
-                    BufferManager::delete_buffer(&current_buf),
-                    "Failed to delete buffer",
-                )?;
-            }
+            self.close_dashboard(current_buf)
         } else {
-            match create_buf(false, true) {
-                Ok(mut buf) => {
-                    handle_error(set_current_buf(&buf), "Failed to set current buffer")?;
+            self.open_dashboard()
+        }
+    }
 
-                    let (dashboard_content, button_count, first_button_index) =
-                        self.content.render();
-                    handle_error(
-                        BufferManager::set_buffer_content(&mut buf, &dashboard_content.join("\n")),
-                        "Failed to set buffer content",
-                    )?;
+    fn close_dashboard(&self, current_buf: Buffer) -> OxiResult<()> {
+        let alternate_buf = list_bufs().find(|b| *b != current_buf && b.is_valid());
 
-                    if button_count == 0 {
-                        return Err(PluginError::Custom(
-                            "No buttons found for keybinds".to_string(),
-                        ));
-                    }
+        if let Some(alternate_buf) = alternate_buf {
+            set_current_buf(&alternate_buf)?;
+        } else {
+            let temp_buf = create_buf(false, true)?;
+            set_current_buf(&temp_buf)?;
+        }
 
-                    let row_offset = BufferManager::get_centered_position(
-                        handle_error(
-                            get_current_win().get_height(),
-                            "Failed to get window height",
-                        )?,
-                        dashboard_content.len(),
-                        dashboard_content
-                            .iter()
-                            .map(|line| line.len())
-                            .max()
-                            .unwrap_or(0),
-                    )?
-                    .0;
-
-                    let last_button_index = first_button_index + button_count - 1;
-
-                    handle_error(
-                        BufferManager::configure_buffer(
-                            &mut buf,
-                            first_button_index,
-                            last_button_index,
-                        ),
-                        "Failed to configure buffer",
-                    )?;
-
-                    handle_error(
-                        get_current_win().set_cursor(first_button_index + row_offset, 0),
-                        "Failed to set cursor position",
-                    )?;
-
-                    self.create_autocmd_for_buffer_deletion(buf)?;
-                }
-                Err(e) => {
-                    return Err(PluginError::Custom(format!(
-                        "Failed to create buffer: {}",
-                        e
-                    )));
-                }
-            }
+        if current_buf.is_valid() {
+            BufferManager::delete_buffer(&current_buf)?;
         }
 
         Ok(())
     }
 
-    fn create_autocmd_for_buffer_deletion(&self, buf: Buffer) -> Result<(), PluginError> {
+    fn open_dashboard(&mut self) -> OxiResult<()> {
+        let mut buf = create_buf(false, true)?;
+        set_current_buf(&buf)?;
+
+        let (dashboard_content, button_count, first_button_index) = self.content.render();
+        BufferManager::set_buffer_content(&mut buf, &dashboard_content.join("\n"))?;
+
+        if button_count == 0 {
+            return Err(PluginError::Custom("No buttons found for keybinds".into()).into());
+        }
+
+        let win_height = get_current_win().get_height()? as usize;
+        let content_height = dashboard_content.len();
+        let row_offset = BufferManager::get_centered_position(win_height as u32, content_height)?;
+
+        let last_button_index = first_button_index + button_count - 1;
+
+        BufferManager::configure_buffer(&mut buf, first_button_index, last_button_index)?;
+
+        get_current_win().set_cursor(first_button_index + row_offset, 0)?;
+
+        self.create_autocmd_for_buffer_deletion(buf)
+    }
+
+    fn create_autocmd_for_buffer_deletion(&self, buf: Buffer) -> OxiResult<()> {
         let autocmd_opts = CreateAutocmdOpts::builder()
-            .buffer(buf.clone())
-            .callback(move |_| {
-                if let Err(e) = BufferManager::delete_buffer(&buf) {
-                    err_writeln(&format!("Failed to delete buffer: {}", e));
+            .buffer(buf.clone()) // Clone buf here
+            .callback({
+                move |_| {
+                    if let Err(e) = BufferManager::delete_buffer(&buf) {
+                        err_writeln(&format!("Failed to delete buffer: {}", e));
+                    }
+                    true
                 }
-                true
             })
             .build();
 
-        handle_error(
-            create_autocmd(["BufLeave"], &autocmd_opts),
-            "Failed to create autocmd",
-        )?;
+        create_autocmd(["BufLeave"], &autocmd_opts)?;
 
         Ok(())
     }

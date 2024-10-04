@@ -1,8 +1,9 @@
-use crate::error::{handle_error, PluginError};
 use nvim_oxi::{
     api::{get_current_win, opts::SetKeymapOpts, types::Mode, Buffer},
     Result as OxiResult,
 };
+
+use crate::error::PluginError;
 
 pub struct KeymapManager;
 
@@ -16,7 +17,7 @@ impl KeymapManager {
         Self::set_cursor_movement_keymap(
             buffer,
             "k",
-            Self::move_up_cursor,
+            -1,
             first_button_index,
             last_button_index,
             raw_height,
@@ -24,7 +25,7 @@ impl KeymapManager {
         Self::set_cursor_movement_keymap(
             buffer,
             "j",
-            Self::move_down_cursor,
+            1,
             first_button_index,
             last_button_index,
             raw_height,
@@ -32,78 +33,61 @@ impl KeymapManager {
         Ok(())
     }
 
-    fn set_cursor_movement_keymap<F>(
+    fn set_cursor_movement_keymap(
         buffer: &mut Buffer,
         key: &str,
-        movement_fn: F,
+        direction: isize,
         first_button_index: usize,
         last_button_index: usize,
         raw_height: usize,
-    ) -> Result<(), PluginError>
-    where
-        F: Fn(usize, usize, usize, usize) -> usize + 'static,
-    {
-        handle_error(
-            buffer.set_keymap(
-                Mode::Normal,
-                key,
-                "",
-                &SetKeymapOpts::builder()
-                    .callback({
-                        move |_| -> Result<(), PluginError> {
-                            let mut win = get_current_win();
-                            let (cur, _) =
-                                handle_error(win.get_cursor(), "Failed to get cursor position")?;
-                            let target_line =
-                                movement_fn(cur, first_button_index, last_button_index, raw_height);
-                            handle_error(
-                                win.set_cursor(target_line, 0),
-                                "Failed to set cursor position",
-                            )?;
-                            Ok(())
-                        }
-                    })
-                    .build(),
-            ),
-            &format!("Failed to set keymap for '{}'", key),
-        )
+    ) -> Result<(), PluginError> {
+        buffer.set_keymap(
+            Mode::Normal,
+            key,
+            "",
+            &SetKeymapOpts::builder()
+                .callback({
+                    move |_| -> Result<(), PluginError> {
+                        let mut win = get_current_win();
+                        let (cur, _) = win.get_cursor()?;
+                        let target_line = Self::move_cursor(
+                            cur,
+                            first_button_index,
+                            last_button_index,
+                            raw_height,
+                            direction,
+                        );
+                        win.set_cursor(target_line, 0)?;
+                        Ok(())
+                    }
+                })
+                .build(),
+        )?;
+        Ok(())
     }
 
-    fn move_up_cursor(
+    fn move_cursor(
         cur: usize,
         first_button_index: usize,
         last_button_index: usize,
         raw_height: usize,
+        direction: isize,
     ) -> usize {
-        if cur == first_button_index {
+        let new_line = cur as isize + direction * raw_height as isize;
+        if new_line < first_button_index as isize {
             last_button_index
-        } else {
-            cur - raw_height
-        }
-    }
-
-    fn move_down_cursor(
-        cur: usize,
-        first_button_index: usize,
-        last_button_index: usize,
-        raw_height: usize,
-    ) -> usize {
-        if cur == last_button_index {
+        } else if new_line > last_button_index as isize {
             first_button_index
         } else {
-            cur + raw_height
+            new_line as usize
         }
     }
 
     pub fn deactivate_keymaps(buffer: &mut Buffer) -> OxiResult<()> {
-        let keys = ["gg", "G", "l", "h", "<Left>", "<Right>"];
+        let keys = ["gg", "G", "l", "h", "<Left>", "<Right>", "<up>", "<down>"];
         for key in &keys {
-            Buffer::set_keymap(buffer, Mode::Normal, key, "", &Default::default())?;
+            buffer.set_keymap(Mode::Normal, key, "<Nop>", &Default::default())?;
         }
-
-        Buffer::set_keymap(buffer, Mode::Normal, "<up>", "k", &Default::default())?;
-        Buffer::set_keymap(buffer, Mode::Normal, "<down>", "j", &Default::default())?;
-
         Ok(())
     }
 }

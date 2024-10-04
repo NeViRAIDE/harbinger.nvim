@@ -8,38 +8,26 @@ use nvim_oxi::{
     Object, Result as OxiResult,
 };
 
-use crate::error::{handle_error, PluginError};
-
 mod keymap;
 
 pub struct BufferManager;
-
-struct BufferOption<'a> {
-    name: &'a str,
-    value: Object,
-}
 
 impl BufferManager {
     pub fn set_buffer_content(buf: &mut Buffer, content: &str) -> OxiResult<()> {
         let lines: Vec<String> = content.lines().map(String::from).collect();
 
         let win = get_current_win();
-        let win_height = handle_error(win.get_height(), "Failed to get window height")?;
-
-        let max_height = std::cmp::max(win_height as usize, lines.len());
-        let mut result = vec!["".to_string(); max_height];
+        let win_height = win.get_height()? as usize;
 
         let content_height = lines.len();
-        let (row, _) = Self::get_centered_position(win_height, content_height, 0)?;
+        let row = Self::get_centered_position(win_height as u32, content_height)?;
 
-        for (i, line) in lines.iter().enumerate() {
-            result[row + i] = line.clone();
-        }
+        let mut result = vec!["".to_string(); row];
+        result.extend(lines);
+        result.resize(win_height, "".to_string());
 
-        handle_error(
-            buf.set_lines(0.., true, result),
-            "Failed to set buffer lines",
-        )?;
+        buf.set_lines(0.., true, result)?;
+
         Ok(())
     }
 
@@ -55,76 +43,40 @@ impl BufferManager {
         Ok(())
     }
 
-    fn get_buffer_options() -> [BufferOption<'static>; 9] {
-        [
-            BufferOption {
-                name: "number",
-                value: Object::from(false),
-            },
-            BufferOption {
-                name: "relativenumber",
-                value: Object::from(false),
-            },
-            BufferOption {
-                name: "filetype",
-                value: Object::from("harbinger"),
-            },
-            BufferOption {
-                name: "modifiable",
-                value: Object::from(false),
-            },
-            BufferOption {
-                name: "wrap",
-                value: Object::from(false),
-            },
-            BufferOption {
-                name: "spell",
-                value: Object::from(false),
-            },
-            BufferOption {
-                name: "list",
-                value: Object::from(false),
-            },
-            BufferOption {
-                name: "cursorcolumn",
-                value: Object::from(false),
-            },
-            BufferOption {
-                name: "swapfile",
-                value: Object::from(false),
-            },
+    fn get_buffer_options() -> Vec<(&'static str, Object)> {
+        vec![
+            ("number", false.into()),
+            ("relativenumber", false.into()),
+            ("filetype", "harbinger".into()),
+            ("modifiable", false.into()),
+            ("wrap", false.into()),
+            ("spell", false.into()),
+            ("list", false.into()),
+            ("cursorcolumn", false.into()),
+            ("swapfile", false.into()),
         ]
     }
 
-    fn set_buffer_options(options: &[BufferOption]) -> OxiResult<()> {
+    fn set_buffer_options(options: &[(&str, Object)]) -> OxiResult<()> {
         let buf_opts = OptionOpts::builder().scope(OptionScope::Local).build();
-        for option in options {
-            handle_error(
-                set_option_value(option.name, option.value.clone(), &buf_opts),
-                &format!("Failed to set '{}' option", option.name),
-            )?;
+        for &(name, ref value) in options {
+            set_option_value(name, value.clone(), &buf_opts)?;
         }
         Ok(())
     }
 
-    pub fn get_centered_position(
-        win_height: u32,
-
-        content_height: usize,
-        _max_line_length: usize,
-    ) -> Result<(usize, usize), PluginError> {
+    pub fn get_centered_position(win_height: u32, content_height: usize) -> OxiResult<usize> {
         let row = if win_height as usize > content_height {
             (win_height as usize - content_height) / 2
         } else {
             0
         };
-
-        Ok((row, 0))
+        Ok(row)
     }
 
     pub fn delete_buffer(buf: &Buffer) -> OxiResult<()> {
         let buf_del_opts = BufDeleteOpts::builder().force(true).build();
-        handle_error(buf.clone().delete(&buf_del_opts), "Failed to delete buffer")?;
+        buf.clone().delete(&buf_del_opts)?;
         Ok(())
     }
 }
