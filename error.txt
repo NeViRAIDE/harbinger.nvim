@@ -1,0 +1,82 @@
+]11;?thread '<unnamed>' panicked at library/core/src/panicking.rs:221:5:
+panic in a function that cannot unwind
+stack backtrace:
+   0:     0x71edcc485ba5 - std::backtrace_rs::backtrace::libunwind::trace::h649ab3318d3445c5
+                               at /rustc/eeb90cda1969383f56a2637cbd3037bdf598841c/library/std/src/../../backtrace/src/backtrace/libunwind.rs:116:5
+   1:     0x71edcc485ba5 - std::backtrace_rs::backtrace::trace_unsynchronized::hf4bb60c3387150c3
+                               at /rustc/eeb90cda1969383f56a2637cbd3037bdf598841c/library/std/src/../../backtrace/src/backtrace/mod.rs:66:5
+   2:     0x71edcc485ba5 - std::sys::backtrace::_print_fmt::hd9186c800e44bd00
+                               at /rustc/eeb90cda1969383f56a2637cbd3037bdf598841c/library/std/src/sys/backtrace.rs:65:5
+   3:     0x71edcc485ba5 - <std::sys::backtrace::BacktraceLock::print::DisplayBacktrace as core::fmt::Display>::fmt::h1b9dad2a88e955ff
+                               at /rustc/eeb90cda1969383f56a2637cbd3037bdf598841c/library/std/src/sys/backtrace.rs:40:26
+   4:     0x71edcc4a53db - core::fmt::rt::Argument::fmt::h351a7824f737a6a0
+                               at /rustc/eeb90cda1969383f56a2637cbd3037bdf598841c/library/core/src/fmt/rt.rs:173:76
+   5:     0x71edcc4a53db - core::fmt::write::h4b5a1270214bc4a7
+                               at /rustc/eeb90cda1969383f56a2637cbd3037bdf598841c/library/core/src/fmt/mod.rs:1182:21
+   6:     0x71edcc483edf - std::io::Write::write_fmt::hd04af345a50c312d
+                               at /rustc/eeb90cda1969383f56a2637cbd3037bdf598841c/library/std/src/io/mod.rs:1827:15
+   7:     0x71edcc486c11 - std::sys::backtrace::BacktraceLock::print::h68d41b51481bce5c
+                               at /rustc/eeb90cda1969383f56a2637cbd3037bdf598841c/library/std/src/sys/backtrace.rs:43:9
+   8:     0x71edcc486c11 - std::panicking::default_hook::{{closure}}::h96ab15e9936be7ed
+                               at /rustc/eeb90cda1969383f56a2637cbd3037bdf598841c/library/std/src/panicking.rs:269:22
+   9:     0x71edcc4868ec - std::panicking::default_hook::h3cacb9c27561ad33
+                               at /rustc/eeb90cda1969383f56a2637cbd3037bdf598841c/library/std/src/panicking.rs:296:9
+  10:     0x71edcc4871e1 - std::panicking::rust_panic_with_hook::hfe205f6954b2c97b
+                               at /rustc/eeb90cda1969383f56a2637cbd3037bdf598841c/library/std/src/panicking.rs:800:13
+  11:     0x71edcc4870a3 - std::panicking::begin_panic_handler::{{closure}}::h6cb44b3a50f28c44
+                               at /rustc/eeb90cda1969383f56a2637cbd3037bdf598841c/library/std/src/panicking.rs:667:13
+  12:     0x71edcc486069 - std::sys::backtrace::__rust_end_short_backtrace::hf1c1f2a92799bb0e
+                               at /rustc/eeb90cda1969383f56a2637cbd3037bdf598841c/library/std/src/sys/backtrace.rs:168:18
+  13:     0x71edcc486d64 - rust_begin_unwind
+                               at /rustc/eeb90cda1969383f56a2637cbd3037bdf598841c/library/std/src/panicking.rs:665:5
+  14:     0x71edcc3f6df5 - core::panicking::panic_nounwind_fmt::runtime::h907a0444fa61a6dc
+                               at /rustc/eeb90cda1969383f56a2637cbd3037bdf598841c/library/core/src/panicking.rs:112:18
+  15:     0x71edcc3f6df5 - core::panicking::panic_nounwind_fmt::h4c4dc67d0bbc166c
+                               at /rustc/eeb90cda1969383f56a2637cbd3037bdf598841c/library/core/src/panicking.rs:122:5
+  16:     0x71edcc3f6e82 - core::panicking::panic_nounwind::hb98133c151c787e4
+                               at /rustc/eeb90cda1969383f56a2637cbd3037bdf598841c/library/core/src/panicking.rs:221:5
+  17:     0x71edcc3f7046 - core::panicking::panic_cannot_unwind::he9511e6e72319a3e
+                               at /rustc/eeb90cda1969383f56a2637cbd3037bdf598841c/library/core/src/panicking.rs:309:5
+  18:     0x71edcc464d16 - nvim_oxi_luajit::function::store::c_fun::hb8eca255ee8a728c
+                               at /home/ra/.cargo/registry/src/index.crates.io-6f17d22bba15001f/nvim-oxi-luajit-0.5.1/src/function.rs:21:5
+  19:     0x71edcce86f06 - <unknown>
+  20:     0x71edcce9b0aa - lua_pcall
+  21:     0x59939af22661 - nlua_pcall
+  22:     0x59939af306f3 - nlua_call_ref
+  23:     0x59939ae1ccfc - <unknown>
+  24:     0x59939ae1f1a4 - getnextac
+  25:     0x59939aeba379 - do_cmdline
+  26:     0x59939ae1daf7 - apply_autocmds_group
+  27:     0x59939ae1e227 - apply_autocmds
+  28:     0x59939b07fd95 - <unknown>
+  29:     0x59939b082910 - win_enter
+  30:     0x59939b082ddd - goto_tabpage_win
+  31:     0x59939ae0f1fb - nvim_set_current_win
+  32:     0x59939af1b764 - <unknown>
+  33:     0x71edcce86f06 - <unknown>
+  34:     0x71edcce9b0aa - lua_pcall
+  35:     0x59939af22661 - nlua_pcall
+  36:     0x59939af32e83 - nlua_do_ucmd
+  37:     0x59939b0675f1 - do_ucmd
+  38:     0x59939aeb847b - <unknown>
+  39:     0x59939aeb89fb - execute_cmd
+  40:     0x59939adec2f7 - nvim_cmd
+  41:     0x59939af11f42 - <unknown>
+  42:     0x71edcce86f06 - <unknown>
+  43:     0x71edcce9b0aa - lua_pcall
+  44:     0x59939af22661 - nlua_pcall
+  45:     0x59939af32e83 - nlua_do_ucmd
+  46:     0x59939b0675f1 - do_ucmd
+  47:     0x59939aeb847b - <unknown>
+  48:     0x59939aeb9c94 - <unknown>
+  49:     0x59939aeba92e - do_cmdline
+  50:     0x59939af81c3f - <unknown>
+  51:     0x59939af7a193 - <unknown>
+  52:     0x59939b028290 - state_enter
+  53:     0x59939af78adc - normal_enter
+  54:     0x59939af36e27 - main
+  55:     0x71edccb8fe08 - <unknown>
+  56:     0x71edccb8fecc - __libc_start_main
+  57:     0x59939ade3065 - _start
+  58:                0x0 - <unknown>
+thread caused non-unwinding panic. aborting.

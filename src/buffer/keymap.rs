@@ -107,7 +107,9 @@ impl KeymapManager {
     }
 
     pub fn deactivate_keymaps(buffer: &mut Buffer) -> OxiResult<()> {
-        let keys = ["gg", "G", "l", "h", "<Left>", "<Right>", "<up>", "<down>"];
+        let keys = [
+            "gg", "G", "L", "H", "l", "h", "<Left>", "<Right>", "<up>", "<down>",
+        ];
         for key in &keys {
             buffer.set_keymap(Mode::Normal, key, "<Nop>", &Default::default())?;
         }

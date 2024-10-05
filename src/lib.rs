@@ -1,18 +1,15 @@
-use std::{cell::RefCell, path::PathBuf, rc::Rc};
+use std::{cell::RefCell, rc::Rc};
 
 use nvim_oxi::{
-    api::{
-        create_autocmd, create_user_command, err_writeln, get_vvar, list_bufs,
-        opts::{CreateAutocmdOpts, CreateCommandOpts},
-        types::{CommandArgs, CommandNArgs},
-        Buffer,
-    },
+    api::{create_autocmd, err_writeln, opts::CreateAutocmdOpts},
     Dictionary, Function, Result as OxiResult,
 };
 
 use config::Config;
 use core::Dashboard;
+use utils::should_open_dashboard;
 
+mod autocmd;
 mod buffer;
 mod config;
 mod content;
@@ -23,23 +20,7 @@ mod utils;
 
 #[nvim_oxi::plugin]
 fn harbinger() -> OxiResult<Dictionary> {
-    let config = Config::default();
-    let app = Rc::new(RefCell::new(Dashboard::new(config)));
-
-    let opts = CreateCommandOpts::builder()
-        .bang(true)
-        .desc("Opens or closes the dashboard")
-        .nargs(CommandNArgs::Zero)
-        .build();
-
-    let app_handle = Rc::clone(&app);
-    let open_or_close_dashboard = move |_: CommandArgs| {
-        if let Err(e) = app_handle.borrow_mut().toggle_dashboard() {
-            err_writeln(&format!("Failed to toggle dashboard: {}", e));
-        }
-    };
-
-    create_user_command("Harbinger", open_or_close_dashboard, &opts)?;
+    let app = Rc::new(RefCell::new(Dashboard::new(Config::default())));
 
     let exports: Dictionary =
         Dictionary::from_iter::<[(&str, Function<Dictionary, OxiResult<()>>); 1]>([(
@@ -47,8 +28,10 @@ fn harbinger() -> OxiResult<Dictionary> {
             Function::from_fn({
                 let app_setup = Rc::clone(&app);
                 move |dict: Dictionary| -> OxiResult<()> {
-                    app_setup.borrow_mut().setup(dict)?;
+                    // Передаем Rc<RefCell<Dashboard>> в метод setup
+                    app_setup.borrow_mut().setup(dict, Rc::clone(&app_setup))?;
 
+                    // Остальной код остается без изменений
                     if app_setup.borrow().config.open_on_start {
                         let app_handle = Rc::clone(&app_setup);
 
@@ -60,7 +43,7 @@ fn harbinger() -> OxiResult<Dictionary> {
                                         err_writeln(&format!("Failed to toggle dashboard: {}", e));
                                     }
                                 }
-                                Ok(true) // Remove the autocommand after it runs
+                                Ok(true)
                             }))
                             .build();
 
@@ -73,25 +56,4 @@ fn harbinger() -> OxiResult<Dictionary> {
         )]);
 
     Ok(exports)
-}
-
-fn should_open_dashboard() -> bool {
-    // Check if there are command-line arguments
-    let argc: i64 = get_vvar("argc").unwrap_or(0);
-    if argc > 0 {
-        return false;
-    }
-
-    // Get the list of buffers and collect into a Vec
-    let buffers: Vec<Buffer> = list_bufs().collect();
-
-    if buffers.len() == 1 {
-        let buffer = &buffers[0];
-        // Check if the buffer is unnamed (no file associated)
-        if buffer.get_name().unwrap_or_default() == PathBuf::new() {
-            return true;
-        }
-    }
-
-    false
 }

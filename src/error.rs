@@ -1,8 +1,9 @@
+use std::io::Error as IoError;
+
 use nvim_oxi::{
     api::{err_writeln, Error as OxiApiError},
     Error as OxiError,
 };
-use std::io::Error as IoError;
 use thiserror::Error;
 
 #[derive(Debug, Error)]

@@ -1,18 +1,18 @@
-use std::{collections::HashMap, sync::Arc};
+use std::{cell::RefCell, collections::HashMap, rc::Rc, sync::Arc};
 
 use nvim_oxi::{
     api::{
-        create_autocmd, create_buf, err_writeln, get_current_buf, get_current_win,
-        get_option_value, list_bufs,
-        opts::{CreateAutocmdOpts, OptionOpts, OptionScope},
-        set_current_buf, set_keymap,
+        create_buf, get_current_buf, get_current_win, get_option_value, list_bufs,
+        opts::{OptionOpts, OptionScope, SetKeymapOpts},
+        set_current_buf, set_keymap, set_option_value,
         types::Mode,
         Buffer,
     },
-    Dictionary, Result as OxiResult,
+    Dictionary, Function, Result as OxiResult,
 };
 
 use crate::{
+    autocmd::buffer_delete,
     buffer::BufferManager,
     config::Config,
     content::{
@@ -23,11 +23,13 @@ use crate::{
         Content,
     },
     error::PluginError,
+    utils::count_file_buffers,
 };
 
 pub struct Dashboard {
     pub config: Config,
     pub content: Content,
+    pub previous_buf: Option<Buffer>,
 }
 
 impl Dashboard {
@@ -35,10 +37,11 @@ impl Dashboard {
         Dashboard {
             config,
             content: Content::new(),
+            previous_buf: None,
         }
     }
 
-    pub fn setup(&mut self, dict: Dictionary) -> OxiResult<()> {
+    pub fn setup(&mut self, dict: Dictionary, app_handle: Rc<RefCell<Dashboard>>) -> OxiResult<()> {
         self.config = Config::from_dict(dict);
 
         self.content = Content::new();
@@ -68,11 +71,17 @@ impl Dashboard {
             &self.config.footer.position,
         ));
 
+        let app_handle_clone = Rc::clone(&app_handle);
+
         set_keymap(
             Mode::Normal,
             &self.config.keymap,
-            "<cmd>Harbinger<cr>",
-            &Default::default(),
+            "",
+            &SetKeymapOpts::builder()
+                .callback(Function::from_fn(move |_| -> OxiResult<()> {
+                    app_handle_clone.borrow_mut().toggle_dashboard()
+                }))
+                .build(),
         )?;
 
         Ok(())
@@ -90,14 +99,34 @@ impl Dashboard {
         }
     }
 
-    fn close_dashboard(&self, current_buf: Buffer) -> OxiResult<()> {
-        let alternate_buf = list_bufs().find(|b| *b != current_buf && b.is_valid());
+    fn close_dashboard(&mut self, current_buf: Buffer) -> OxiResult<()> {
+        let file_buf_count = count_file_buffers();
 
-        if let Some(alternate_buf) = alternate_buf {
-            set_current_buf(&alternate_buf)?;
+        if file_buf_count <= 1 {
+            // Do not close the dashboard if there are no other file buffers
+            return Ok(());
+        }
+
+        if let Some(prev_buf) = self.previous_buf.take() {
+            if prev_buf.is_valid() {
+                set_current_buf(&prev_buf)?;
+            } else {
+                // Switch to another valid buffer if available
+                for buf in list_bufs() {
+                    if buf.is_valid() && buf != current_buf {
+                        set_current_buf(&buf)?;
+                        break;
+                    }
+                }
+            }
         } else {
-            let temp_buf = create_buf(false, true)?;
-            set_current_buf(&temp_buf)?;
+            // No previous buffer; switch to another valid buffer if available
+            for buf in list_bufs() {
+                if buf.is_valid() && buf != current_buf {
+                    set_current_buf(&buf)?;
+                    break;
+                }
+            }
         }
 
         if current_buf.is_valid() {
@@ -108,6 +137,34 @@ impl Dashboard {
     }
 
     fn open_dashboard(&mut self) -> OxiResult<()> {
+        let file_buf_count = count_file_buffers();
+
+        if file_buf_count == 0 {
+            // There are no file buffers open
+            self.previous_buf = None;
+        } else {
+            self.previous_buf = Some(get_current_buf());
+        }
+        let current_buf = get_current_buf();
+
+        // Get the buffer name
+        let buf_name = current_buf.get_name()?;
+        let buf_name_str = buf_name.to_str().unwrap_or("");
+
+        // Create OptionOpts for the current buffer
+        let buf_opts = OptionOpts::builder()
+            // .scope(OptionScope::Buffer)
+            .buffer(current_buf.clone())
+            .build();
+
+        // Check if the buffer is modified
+        let is_modified: bool = get_option_value("modified", &buf_opts)?;
+
+        if buf_name_str.is_empty() && !is_modified {
+            // Set 'bufhidden' to 'wipe' for the initial empty buffer
+            set_option_value("bufhidden", "wipe", &buf_opts)?;
+        }
+
         let mut buf = create_buf(false, true)?;
         set_current_buf(&buf)?;
 
@@ -125,7 +182,7 @@ impl Dashboard {
         let adjusted_first_button_line = first_button_line + top_padding;
         let last_button_line = adjusted_first_button_line + button_count - 1;
 
-        // **Adjust the command_mapping line numbers**
+        // Adjust the command_mapping line numbers
         let adjusted_command_mapping: HashMap<usize, String> = command_mapping
             .into_iter()
             .map(|(line, command)| (line + top_padding, command))
@@ -154,23 +211,8 @@ impl Dashboard {
             Arc::clone(&command_mapping),
         )?;
 
-        self.create_autocmd_for_buffer_deletion(buf)
-    }
-
-    fn create_autocmd_for_buffer_deletion(&self, buf: Buffer) -> OxiResult<()> {
-        let autocmd_opts = CreateAutocmdOpts::builder()
-            .buffer(buf.clone()) // Clone buf here
-            .callback({
-                move |_| {
-                    if let Err(e) = BufferManager::delete_buffer(&buf) {
-                        err_writeln(&format!("Failed to delete buffer: {}", e));
-                    }
-                    true
-                }
-            })
-            .build();
-
-        create_autocmd(["BufLeave"], &autocmd_opts)?;
+        // Set up autocommand to delete dashboard buffer when appropriate
+        buffer_delete(buf.clone())?;
 
         Ok(())
     }

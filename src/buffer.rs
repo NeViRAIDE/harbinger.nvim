@@ -3,8 +3,8 @@ use std::{collections::HashMap, sync::Arc};
 use keymap::KeymapManager;
 use nvim_oxi::{
     api::{
-        get_current_win,
-        opts::{BufDeleteOpts, OptionOpts, OptionScope},
+        get_current_win, get_option_value,
+        opts::{OptionOpts, OptionScope},
         set_option_value, Buffer,
     },
     Object, Result as OxiResult,
@@ -57,6 +57,9 @@ impl BufferManager {
             ("list", false.into()),
             ("cursorcolumn", false.into()),
             ("swapfile", false.into()),
+            ("bufhidden", "wipe".into()),
+            ("buftype", "nofile".into()),
+            ("buflisted", false.into()), // Add this line
         ]
     }
 
@@ -78,8 +81,19 @@ impl BufferManager {
     }
 
     pub fn delete_buffer(buf: &Buffer) -> OxiResult<()> {
-        let buf_del_opts = BufDeleteOpts::builder().force(true).build();
-        buf.clone().delete(&buf_del_opts)?;
+        let buf_ft: String = get_option_value(
+            "filetype",
+            &OptionOpts::builder()
+                // .scope(OptionScope::Local)
+                .buffer(buf.clone())
+                .build(),
+        )?;
+
+        if buf_ft == "harbinger" {
+            // Only delete the buffer if it's the dashboard
+            buf.clone().delete(&Default::default())?;
+        }
+
         Ok(())
     }
 }

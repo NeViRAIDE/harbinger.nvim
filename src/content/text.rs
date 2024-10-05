@@ -1,7 +1,6 @@
 use std::any::Any;
 
-use crate::error::handle_error;
-use crate::utils::get_window_size;
+use crate::{error::handle_error, utils::get_window_size};
 
 use super::{DashboardElement, ElementAlignment};
 

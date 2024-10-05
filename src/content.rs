@@ -1,13 +1,12 @@
-use std::any::Any;
-use std::collections::HashMap;
+use std::{any::Any, collections::HashMap};
 
 use button::ButtonGroup;
 
 pub mod button;
+pub mod empty_line;
 pub mod footer;
 pub mod header;
 pub mod text;
-pub mod empty_line;
 
 pub trait DashboardElement {
     fn render(&self) -> String;
