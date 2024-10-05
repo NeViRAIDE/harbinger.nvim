@@ -1,3 +1,5 @@
+pub const DEFAULT_AUTO_OPEN: bool = true;
+
 pub const DEFAULT_KEYMAP: &str = "<M-d>";
 
 pub const DEFAULT_HEADER_TEXT: &str = "Welcome to Neovim!";

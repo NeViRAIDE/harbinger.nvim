@@ -1,13 +1,14 @@
 use nvim_oxi::{conversion::FromObject, Dictionary, Object};
 
 use crate::defaults::{
-    DEFAULT_BUTTONS_ITEMS, DEFAULT_BUTTONS_POSITION, DEFAULT_FOOTER_POSITION, DEFAULT_FOOTER_TEXT,
-    DEFAULT_HEADER_POSITION, DEFAULT_HEADER_TEXT, DEFAULT_KEYMAP, DEFAULT_SUB_HEADER_POSITION,
-    DEFAULT_SUB_HEADER_TEXT,
+    DEFAULT_AUTO_OPEN, DEFAULT_BUTTONS_ITEMS, DEFAULT_BUTTONS_POSITION, DEFAULT_FOOTER_POSITION,
+    DEFAULT_FOOTER_TEXT, DEFAULT_HEADER_POSITION, DEFAULT_HEADER_TEXT, DEFAULT_KEYMAP,
+    DEFAULT_SUB_HEADER_POSITION, DEFAULT_SUB_HEADER_TEXT,
 };
 
 #[derive(Debug, Default)]
 pub struct Config {
+    pub open_on_start: bool,
     pub keymap: String,
     pub header: TextPosition,
     pub sub_header: TextPosition,
@@ -30,6 +31,7 @@ pub struct ButtonsConfig {
 impl Config {
     pub fn from_dict(options: Dictionary) -> Self {
         Self {
+            open_on_start: parse_bool_option(&options, "open_on_start", DEFAULT_AUTO_OPEN),
             keymap: parse_string_option(&options, "keymap", DEFAULT_KEYMAP),
             header: parse_text_position_option(
                 &options,
@@ -69,7 +71,7 @@ fn parse_text_position_option(
 ) -> TextPosition {
     if let Some(obj) = options.get(key) {
         if let Ok(dict) = Dictionary::from_object(obj.clone()) {
-            let text = parse_string_in_dict(&dict, "text", default_text);
+            let text = parse_text_in_dict(&dict, "text", default_text);
             let position = parse_string_in_dict(&dict, "position", default_position);
             TextPosition { text, position }
         } else {
@@ -90,6 +92,29 @@ fn parse_string_in_dict(dict: &Dictionary, key: &str, default: &str) -> String {
     dict.get(key)
         .and_then(|obj| String::from_object(obj.clone()).ok())
         .unwrap_or_else(|| default.to_string())
+}
+
+fn parse_text_in_dict(dict: &Dictionary, key: &str, default: &str) -> String {
+    if let Some(obj) = dict.get(key) {
+        // Try to parse as a string
+        if let Ok(string_value) = String::from_object(obj.clone()) {
+            string_value
+        }
+        // Try to parse as an array of strings
+        else if let Ok(array) = Vec::<Object>::from_object(obj.clone()) {
+            array
+                .into_iter()
+                .filter_map(|item| String::from_object(item).ok())
+                .collect::<Vec<String>>()
+                .join("\n")
+        }
+        // Fallback to default
+        else {
+            default.to_string()
+        }
+    } else {
+        default.to_string()
+    }
 }
 
 fn parse_buttons_config(options: &Dictionary) -> ButtonsConfig {
@@ -147,4 +172,11 @@ fn parse_buttons_items(dict: &Dictionary) -> Vec<(String, String, String)> {
             .map(|(t, i, c)| (t.to_string(), i.to_string(), c.to_string()))
             .collect()
     }
+}
+
+fn parse_bool_option(options: &Dictionary, key: &str, default: bool) -> bool {
+    options
+        .get(key)
+        .and_then(|obj| bool::from_object(obj.clone()).ok())
+        .unwrap_or(default)
 }
