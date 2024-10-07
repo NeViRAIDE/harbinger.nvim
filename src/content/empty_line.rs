@@ -16,4 +16,8 @@ impl DashboardElement for EmptyLineElement {
     fn as_any(&self) -> &dyn Any {
         self
     }
+
+    fn highlight_group(&self) -> &'static str {
+        "HarbingerEmptyLine"
+    }
 }

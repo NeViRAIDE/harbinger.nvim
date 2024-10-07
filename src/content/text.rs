@@ -7,13 +7,15 @@ use super::{DashboardElement, ElementAlignment};
 pub struct TextElement {
     text: String,
     alignment: ElementAlignment,
+    highlight: &'static str,
 }
 
 impl TextElement {
-    pub fn new(text: &str, alignment: ElementAlignment) -> Self {
+    pub fn new(text: &str, alignment: ElementAlignment, highlight: &'static str) -> Self {
         Self {
             text: text.to_string(),
             alignment,
+            highlight,
         }
     }
 }
@@ -43,5 +45,9 @@ impl DashboardElement for TextElement {
 
     fn as_any(&self) -> &dyn Any {
         self
+    }
+
+    fn highlight_group(&self) -> &'static str {
+        self.highlight
     }
 }

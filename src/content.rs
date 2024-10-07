@@ -12,6 +12,7 @@ pub trait DashboardElement {
     fn render(&self) -> String;
     fn alignment(&self) -> ElementAlignment;
     fn as_any(&self) -> &dyn Any;
+    fn highlight_group(&self) -> &'static str;
 }
 
 #[derive(Clone)]
@@ -36,12 +37,21 @@ impl Content {
         self.elements.push(element);
     }
 
-    pub fn render(&self) -> (Vec<String>, usize, usize, HashMap<usize, String>) {
+    pub fn render(
+        &self,
+    ) -> (
+        Vec<String>,
+        usize,
+        usize,
+        HashMap<usize, String>,
+        HashMap<usize, (String, usize, usize)>,
+    ) {
         let mut lines = Vec::new();
         let mut button_count = 0;
         let mut first_button_line = None;
         let mut current_line_number = 1; // Start from 1
         let mut command_mapping = HashMap::new();
+        let mut highlights = HashMap::new();
 
         for element in self.elements.iter() {
             let rendered = element.render();
@@ -58,11 +68,34 @@ impl Content {
                     // Map the line number to the command
                     command_mapping
                         .insert(current_line_number, button_group.buttons[i].command.clone());
+
+                    let highlight_group = button_group.buttons[i].highlight_group();
+
+                    let text_start_pos = line.chars().take_while(|c| c.is_whitespace()).count();
+                    let text_len = line.trim().len();
+
+                    highlights.insert(
+                        current_line_number,
+                        (highlight_group.to_string(), text_start_pos, text_len),
+                    );
+
                     current_line_number += 1;
                 }
             } else {
                 for line in rendered_lines {
                     lines.push(line.to_string());
+
+                    let highlight_group = element.highlight_group();
+
+                    let text_start_pos = line.chars().take_while(|c| c.is_whitespace()).count();
+                    let text_len = line.trim().len();
+
+                    // Сохраняем информацию о подсветке, позиции начала текста и длине текста
+                    highlights.insert(
+                        current_line_number,
+                        (highlight_group.to_string(), text_start_pos, text_len),
+                    );
+
                     current_line_number += 1;
                 }
             }
@@ -73,6 +106,7 @@ impl Content {
             button_count,
             first_button_line.unwrap_or(1),
             command_mapping,
+            highlights,
         )
     }
 }

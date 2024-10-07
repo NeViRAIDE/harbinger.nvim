@@ -15,7 +15,12 @@ pub const DEFAULT_BUTTONS_ITEMS: &[(&str, &str, &str)] = &[
     ("Create new file", "", "edit new_file.txt"),
     ("Find file", "", "Telescope find_files"),
     ("Recent files", "", "Telescope oldfiles"),
-    ("Exit", "X", "qall"),
+    ("Find word", "", "Telescope live_grep"),
+    ("TODO list", "", "TodoTelescope theme=ivy initial_mode=normal previewer=false layout_config={bottom_pane={height=14}}"),
+    ("Check health", "", "checkhealth"),
+    ("Plugin manager", "", "Lazy"),
+    ("Settings", "", "e ~/.config/nvim/lua/NEVIRAIDE.lua"),
+    ("Exit", "", "qa"),
 ];
 
 pub const DEFAULT_BUTTONS_POSITION: &str = "center";

@@ -168,7 +168,7 @@ impl Dashboard {
         let mut buf = create_buf(false, true)?;
         set_current_buf(&buf)?;
 
-        let (dashboard_content, button_count, first_button_line, command_mapping) =
+        let (dashboard_content, button_count, first_button_line, command_mapping, highlights) =
             self.content.render();
 
         let top_padding =
@@ -210,6 +210,27 @@ impl Dashboard {
             last_button_line,
             Arc::clone(&command_mapping),
         )?;
+
+        let ns_id = nvim_oxi::api::create_namespace("harbinger");
+
+        for (line_number, (highlight_group, text_start_pos, text_len)) in highlights.iter() {
+            if *text_len > 0 {
+                nvim_oxi::print!(
+                    "Applying highlight for group: {} on line: {} from position: {}",
+                    highlight_group,
+                    line_number + top_padding,
+                    text_start_pos
+                );
+                if let Err(err) = buf.add_highlight(
+                    ns_id,
+                    highlight_group,
+                    line_number + top_padding - 1,
+                    *text_start_pos..(*text_start_pos + text_len),
+                ) {
+                    nvim_oxi::api::err_writeln(&format!("Failed to apply highlight: {}", err));
+                }
+            }
+        }
 
         // Set up autocommand to delete dashboard buffer when appropriate
         buffer_delete(buf.clone())?;

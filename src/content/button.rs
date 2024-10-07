@@ -9,15 +9,21 @@ pub struct Button {
     pub title: String,
     pub icon: String,
     pub command: String,
+    highlight: &'static str,
 }
 
 impl Button {
-    pub fn new(title: &str, icon: &str, command: &str) -> Self {
+    pub fn new(title: &str, icon: &str, command: &str, highlight: &'static str) -> Self {
         Self {
             title: title.to_string(),
             icon: icon.to_string(),
             command: command.to_string(),
+            highlight,
         }
+    }
+
+    pub fn highlight_group(&self) -> &'static str {
+        self.highlight
     }
 }
 
@@ -98,6 +104,10 @@ impl DashboardElement for ButtonGroup {
     fn as_any(&self) -> &dyn Any {
         self
     }
+
+    fn highlight_group(&self) -> &'static str {
+        "HarbingerButton"
+    }
 }
 
 pub fn create_buttons(
@@ -112,7 +122,7 @@ pub fn create_buttons(
 
     let buttons: Vec<Button> = content
         .iter()
-        .map(|(title, icon, command)| Button::new(title, icon, command))
+        .map(|(title, icon, command)| Button::new(title, icon, command, "HarbingerButton"))
         .collect();
 
     vec![Box::new(ButtonGroup::new(buttons, alignment_enum))]

@@ -6,6 +6,7 @@ use nvim_oxi::{
     },
     Function, Result as OxiResult,
 };
+// TODO: open dashboard if last buffer was closed
 
 use crate::buffer::BufferManager;
 

@@ -16,11 +16,16 @@ mod content;
 mod core;
 mod defaults;
 mod error;
+mod highlights;
 mod utils;
 
 #[nvim_oxi::plugin]
 fn harbinger() -> OxiResult<Dictionary> {
     let app = Rc::new(RefCell::new(Dashboard::new(Config::default())));
+
+    if let Err(err) = crate::highlights::setup_highlight_groups() {
+        err_writeln(&format!("setup_hi_groups in core: {}", err));
+    };
 
     let exports: Dictionary =
         Dictionary::from_iter::<[(&str, Function<Dictionary, OxiResult<()>>); 1]>([(

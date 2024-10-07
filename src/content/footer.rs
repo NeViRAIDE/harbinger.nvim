@@ -7,5 +7,5 @@ pub fn create_footer(content: &str, alignment: &str) -> Box<dyn DashboardElement
         _ => ElementAlignment::Center,
     };
 
-    Box::new(TextElement::new(content, alignment_enum))
+    Box::new(TextElement::new(content, alignment_enum, "HarbingerFooter"))
 }

@@ -7,7 +7,7 @@ pub fn create_header(content: &str, alignment: &str) -> Box<dyn DashboardElement
         _ => ElementAlignment::Center,
     };
 
-    Box::new(TextElement::new(content, alignment_enum))
+    Box::new(TextElement::new(content, alignment_enum, "HarbingerHeader"))
 }
 
 pub fn create_subheader(content: &str, alignment: &str) -> Box<dyn DashboardElement> {
@@ -17,5 +17,9 @@ pub fn create_subheader(content: &str, alignment: &str) -> Box<dyn DashboardElem
         _ => ElementAlignment::Center,
     };
 
-    Box::new(TextElement::new(content, alignment_enum))
+    Box::new(TextElement::new(
+        content,
+        alignment_enum,
+        "HarbingerSubHeader",
+    ))
 }
