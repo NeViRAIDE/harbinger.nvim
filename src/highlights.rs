@@ -8,7 +8,7 @@ pub fn setup_highlight_groups() -> Result<(), PluginError> {
             0,
             "HarbingerHeader",
             &SetHighlightOpts::builder()
-                .foreground("#FF0000")
+                .link("String")
                 .bold(true)
                 .build(),
         ),
@@ -32,7 +32,7 @@ pub fn setup_highlight_groups() -> Result<(), PluginError> {
             0,
             "HarbingerButton",
             &SetHighlightOpts::builder()
-                .foreground("#00FF00")
+                .link("Constant")
                 .italic(true)
                 .build(),
         ),
@@ -44,7 +44,7 @@ pub fn setup_highlight_groups() -> Result<(), PluginError> {
             0,
             "HarbingerFooter",
             &SetHighlightOpts::builder()
-                .link("Comment")
+                .link("NonText")
                 .bold(true) // Жирный шрифт
                 .build(),
         ),

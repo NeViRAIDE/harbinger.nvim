@@ -102,7 +102,7 @@ impl Dashboard {
     fn close_dashboard(&mut self, current_buf: Buffer) -> OxiResult<()> {
         let file_buf_count = count_file_buffers();
 
-        if file_buf_count <= 1 {
+        if file_buf_count < 1 {
             // Do not close the dashboard if there are no other file buffers
             return Ok(());
         }
