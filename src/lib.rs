@@ -6,26 +6,15 @@ use nvim_oxi::{
 };
 
 use config::Config;
-use core::Dashboard;
 use utils::should_open_dashboard;
 
-mod autocmd;
-mod buffer;
 mod config;
-mod content;
-mod core;
-mod defaults;
 mod error;
-mod highlights;
 mod utils;
 
 #[nvim_oxi::plugin]
 fn harbinger() -> OxiResult<Dictionary> {
-    let app = Rc::new(RefCell::new(Dashboard::new(Config::default())));
-
-    if let Err(err) = crate::highlights::setup_highlight_groups() {
-        err_writeln(&format!("setup_hi_groups in core: {}", err));
-    };
+    let app = Rc::new(Dashboard::new(Config::default()));
 
     let exports: Dictionary =
         Dictionary::from_iter::<[(&str, Function<Dictionary, OxiResult<()>>); 1]>([(
@@ -33,14 +22,11 @@ fn harbinger() -> OxiResult<Dictionary> {
             Function::from_fn({
                 let app_setup = Rc::clone(&app);
                 move |dict: Dictionary| -> OxiResult<()> {
-                    // Передаем Rc<RefCell<Dashboard>> в метод setup
                     app_setup.borrow_mut().setup(dict, Rc::clone(&app_setup))?;
 
-                    // Остальной код остается без изменений
                     if app_setup.borrow().config.open_on_start {
                         let app_handle = Rc::clone(&app_setup);
 
-                        // Set up autocommand on UIEnter
                         let autocmd_opts = CreateAutocmdOpts::builder()
                             .callback(Function::from_fn(move |_| -> OxiResult<bool> {
                                 if should_open_dashboard() {
