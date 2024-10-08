@@ -97,10 +97,6 @@ impl DashboardElement for ButtonGroup {
         rendered_buttons
     }
 
-    fn alignment(&self) -> ElementAlignment {
-        self.alignment.clone()
-    }
-
     fn as_any(&self) -> &dyn Any {
         self
     }

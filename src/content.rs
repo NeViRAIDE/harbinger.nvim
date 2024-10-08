@@ -8,9 +8,13 @@ pub mod footer;
 pub mod header;
 pub mod text;
 
+type CommandMapping = HashMap<usize, String>;
+type HighlightInfo = HashMap<usize, (String, usize, usize)>;
+
+type RenderResult = (Vec<String>, usize, usize, CommandMapping, HighlightInfo);
+
 pub trait DashboardElement {
     fn render(&self) -> String;
-    fn alignment(&self) -> ElementAlignment;
     fn as_any(&self) -> &dyn Any;
     fn highlight_group(&self) -> &'static str;
 }
@@ -37,15 +41,7 @@ impl Content {
         self.elements.push(element);
     }
 
-    pub fn render(
-        &self,
-    ) -> (
-        Vec<String>,
-        usize,
-        usize,
-        HashMap<usize, String>,
-        HashMap<usize, (String, usize, usize)>,
-    ) {
+    pub fn render(&self) -> RenderResult {
         let mut lines = Vec::new();
         let mut button_count = 0;
         let mut first_button_line = None;

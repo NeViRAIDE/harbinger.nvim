@@ -39,10 +39,6 @@ impl DashboardElement for TextElement {
         format!("{}\n", formatted_text)
     }
 
-    fn alignment(&self) -> ElementAlignment {
-        self.alignment.clone()
-    }
-
     fn as_any(&self) -> &dyn Any {
         self
     }
