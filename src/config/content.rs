@@ -2,7 +2,7 @@ use std::{cell::RefCell, rc::Rc};
 
 use nvim_oxi::{conversion::FromObject, Dictionary, Object};
 
-use crate::error::{handle_error, PluginError};
+use crate::error::{PluginError, ResultExt};
 
 use super::{
     highlights::{parse_highlights, Highlights},
@@ -76,28 +76,21 @@ pub enum VerticalAlignment {
 
 impl Content {
     pub fn from_dict(dict: &Dictionary) -> Result<Self, PluginError> {
-        let content_obj = handle_error(
-            dict.get("content")
-                .ok_or_else(|| PluginError::Custom("'content' field is missing".to_string())),
-            "Failed to get 'content' from dictionary",
-        )?;
+        let content_obj = dict
+            .get("content")
+            .ok_or_else(|| PluginError::Custom("'content' field is missing".to_string()))
+            .with_context("Failed to get 'content' from dictionary")?;
 
-        let content_dict = handle_error(
-            Dictionary::from_object(content_obj.clone()),
-            "Failed to convert 'content' to Dictionary",
-        )?;
+        let content_dict = Dictionary::from_object(content_obj.clone())
+            .with_context("Failed to convert 'content' to Dictionary")?;
 
-        let content_type_obj = handle_error(
-            content_dict
-                .get("type")
-                .ok_or_else(|| PluginError::Custom("'type' field is missing".to_string())),
-            "Failed to get 'type' field from content dictionary",
-        )?;
+        let content_type_obj = content_dict
+            .get("type")
+            .ok_or_else(|| PluginError::Custom("'type' field is missing".to_string()))
+            .with_context("Failed to get 'type' field from content dictionary")?;
 
-        let content_type_str = handle_error(
-            String::from_object(content_type_obj.clone()),
-            "Failed to convert 'type' to string",
-        )?;
+        let content_type_str = String::from_object(content_type_obj.clone())
+            .with_context("Failed to convert 'type' to string")?;
 
         match content_type_str.as_str() {
             "text" => Ok(Content::Text(Rc::new(RefCell::new(TextContent {

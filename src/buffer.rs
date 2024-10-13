@@ -1,12 +1,11 @@
-use std::cell::RefCell; // Импортируем RefCell
-use std::rc::Rc;
+use std::{cell::RefCell, rc::Rc};
 
 use nvim_oxi::{
     api::{create_buf, opts::OptionOpts, set_option_value, Buffer},
     Result as OxiResult,
 };
 
-use crate::error::handle_error;
+use crate::error::ResultExt;
 
 #[derive(Debug)]
 pub struct BufferManager {
@@ -21,7 +20,7 @@ pub struct BufferContent;
 
 impl BufferManager {
     pub fn new() -> OxiResult<Self> {
-        let buffer = handle_error(create_buf(false, true), "Failed to create new buffer")?;
+        let buffer = create_buf(false, true).with_context("Failed to create new buffer")?;
 
         let buffer_options = OptionOpts::builder().buffer(buffer.clone()).build();
 

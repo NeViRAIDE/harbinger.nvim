@@ -1,8 +1,6 @@
-use std::cell::RefCell;
-use std::rc::Rc;
+use std::{cell::RefCell, rc::Rc};
 
-use crate::config::content::Content;
-use crate::config::highlights::Highlights;
+use crate::config::{content::Content, highlights::Highlights};
 
 use super::{Column, Row};
 

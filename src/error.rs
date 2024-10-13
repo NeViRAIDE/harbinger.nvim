@@ -25,12 +25,25 @@ impl From<PluginError> for OxiError {
     }
 }
 
-pub fn handle_error<T, E>(result: Result<T, E>, context: &str) -> Result<T, PluginError>
+// pub fn handle_error<T, E>(result: Result<T, E>, context: &str) -> Result<T, PluginError>
+// where
+//     E: Display,
+// {
+//     result.map_err(|e| {
+//         let err_msg = format!("{}: {}", context, e);
+//         PluginError::Custom(err_msg)
+//     })
+// }
+
+pub trait ResultExt<T, E> {
+    fn with_context(self, context: &str) -> Result<T, PluginError>;
+}
+
+impl<T, E> ResultExt<T, E> for Result<T, E>
 where
     E: Display,
 {
-    result.map_err(|e| {
-        let err_msg = format!("{}: {}", context, e);
-        PluginError::Custom(err_msg)
-    })
+    fn with_context(self, context: &str) -> Result<T, PluginError> {
+        self.map_err(|e| PluginError::Custom(format!("{}: {}", context, e)))
+    }
 }

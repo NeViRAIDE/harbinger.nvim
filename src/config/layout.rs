@@ -1,6 +1,6 @@
 use std::{cell::RefCell, rc::Rc};
 
-use nvim_oxi::{conversion::FromObject, Dictionary, Object};
+use nvim_oxi::{api::err_writeln, conversion::FromObject, Dictionary, Object};
 
 use super::{
     content::Content,
@@ -8,7 +8,7 @@ use super::{
     parse_bool_option, parse_usize_option,
 };
 
-use self::column::ColumnBuilder;
+use column::ColumnBuilder;
 
 mod column;
 
@@ -21,16 +21,16 @@ pub struct DashboardLayout {
 pub struct Row {
     pub columns: Vec<Rc<RefCell<Column>>>,
     pub content: Option<Content>,
-    pub width: String,  // Используем String для поддержки процентов
-    pub height: String, // Используем String для поддержки процентов
+    pub width: String,
+    pub height: String,
     pub priority: Option<usize>,
     pub hide_on_resize: Option<bool>,
 }
 
 #[derive(Debug, Default)]
 pub struct Column {
-    pub width: String,  // Используем String для поддержки процентов
-    pub height: String, // Используем String для поддержки процентов
+    pub width: String,
+    pub height: String,
     pub content: Option<Content>,
     pub rows: Vec<Rc<RefCell<Row>>>,
     pub columns: Vec<Rc<RefCell<Column>>>,
@@ -69,13 +69,13 @@ fn parse_layout_items<T>(
                     if let Ok(item_dict) = Dictionary::from_object(item_obj) {
                         Some(Rc::new(RefCell::new(parse_fn(&item_dict))))
                     } else {
-                        nvim_oxi::api::err_writeln("Failed to parse item_dict");
+                        err_writeln("Failed to parse item_dict");
                         None
                     }
                 })
                 .collect();
         } else {
-            nvim_oxi::api::err_writeln(&format!("Failed to parse {}_array", key));
+            err_writeln(&format!("Failed to parse {}_array", key));
         }
     }
     vec![]
@@ -87,20 +87,6 @@ fn parse_string_option(options: &Dictionary, key: &str, default: String) -> Stri
         .and_then(|obj| String::from_object(obj.clone()).ok())
         .unwrap_or(default)
 }
-
-// fn parse_columns(dict: &Dictionary, key: &str) -> Vec<Rc<RefCell<Column>>> {
-//     parse_layout_items(dict, key, |column_dict| Column {
-//         width: parse_string_option(column_dict, "width", "100%".to_string()),
-//         height: parse_string_option(column_dict, "height", "100%".to_string()),
-//         content: Content::from_dict(column_dict).ok(),
-//         rows: parse_nested_rows(column_dict),
-//         columns: parse_nested_columns(column_dict),
-//         active: parse_bool_option(column_dict, "active", false),
-//         highlights: parse_highlights(column_dict),
-//         priority: Some(parse_usize_option(column_dict, "priority", 1)),
-//         hide_on_resize: Some(parse_bool_option(column_dict, "hide_on_resize", false)),
-//     })
-// }
 
 fn parse_columns(dict: &Dictionary, key: &str) -> Vec<Rc<RefCell<Column>>> {
     parse_layout_items(dict, key, |column_dict| {
@@ -128,7 +114,7 @@ fn parse_columns(dict: &Dictionary, key: &str) -> Vec<Rc<RefCell<Column>>> {
 
 fn parse_rows(dict: &Dictionary, key: &str) -> Vec<Rc<RefCell<Row>>> {
     parse_layout_items(dict, key, |row_dict| Row {
-        content: Content::from_dict(row_dict).ok(), // Парсинг content
+        content: Content::from_dict(row_dict).ok(),
         columns: parse_columns(row_dict, "columns"),
         width: parse_string_option(row_dict, "width", "100%".to_string()),
         height: parse_string_option(row_dict, "height", "100%".to_string()),
@@ -136,77 +122,6 @@ fn parse_rows(dict: &Dictionary, key: &str) -> Vec<Rc<RefCell<Row>>> {
         hide_on_resize: Some(parse_bool_option(row_dict, "hide_on_resize", false)),
     })
 }
-
-// fn parse_nested_rows(dict: &Dictionary) -> Vec<Rc<RefCell<Row>>> {
-//     if let Some(obj) = dict.get("rows") {
-//         if let Ok(rows_array) = Vec::<Object>::from_object(obj.clone()) {
-//             rows_array
-//                 .into_iter()
-//                 .filter_map(|row_obj| {
-//                     if let Ok(row_dict) = Dictionary::from_object(row_obj) {
-//                         Some(Rc::new(RefCell::new(Row {
-//                             content: Content::from_dict(&row_dict).ok(),
-//                             columns: parse_columns(&row_dict, "columns"),
-//                             width: parse_string_option(&row_dict, "width", "100%".to_string()),
-//                             height: parse_string_option(&row_dict, "height", "100%".to_string()),
-//                             priority: Some(parse_usize_option(&row_dict, "priority", 1)),
-//                             hide_on_resize: Some(parse_bool_option(
-//                                 &row_dict,
-//                                 "hide_on_resize",
-//                                 false,
-//                             )),
-//                         })))
-//                     } else {
-//                         nvim_oxi::api::err_writeln("Failed to parse row_dict");
-//                         None
-//                     }
-//                 })
-//                 .collect()
-//         } else {
-//             nvim_oxi::api::err_writeln("Failed to parse rows_array");
-//             vec![]
-//         }
-//     } else {
-//         vec![]
-//     }
-// }
-//
-// fn parse_nested_columns(dict: &Dictionary) -> Vec<Rc<RefCell<Column>>> {
-//     if let Some(obj) = dict.get("columns") {
-//         if let Ok(columns_array) = Vec::<Object>::from_object(obj.clone()) {
-//             columns_array
-//                 .into_iter()
-//                 .filter_map(|column_obj| {
-//                     if let Ok(column_dict) = Dictionary::from_object(column_obj) {
-//                         Some(Rc::new(RefCell::new(Column {
-//                             width: parse_string_option(&column_dict, "width", "100%".to_string()),
-//                             height: parse_string_option(&column_dict, "height", "100%".to_string()),
-//                             content: Content::from_dict(&column_dict).ok(),
-//                             rows: parse_nested_rows(&column_dict),
-//                             columns: parse_nested_columns(&column_dict),
-//                             active: parse_bool_option(&column_dict, "active", false),
-//                             highlights: parse_highlights(&column_dict),
-//                             priority: Some(parse_usize_option(&column_dict, "priority", 1)),
-//                             hide_on_resize: Some(parse_bool_option(
-//                                 &column_dict,
-//                                 "hide_on_resize",
-//                                 false,
-//                             )),
-//                         })))
-//                     } else {
-//                         nvim_oxi::api::err_writeln("Failed to parse column_dict");
-//                         None
-//                     }
-//                 })
-//                 .collect()
-//         } else {
-//             nvim_oxi::api::err_writeln("Failed to parse columns_array");
-//             vec![]
-//         }
-//     } else {
-//         vec![]
-//     }
-// }
 
 fn parse_nested_rows(dict: &Dictionary) -> Vec<Rc<RefCell<Row>>> {
     if let Some(obj) = dict.get("rows") {
@@ -218,7 +133,6 @@ fn parse_nested_rows(dict: &Dictionary) -> Vec<Rc<RefCell<Row>>> {
                         let content = Content::from_dict(&row_dict).ok();
                         let columns = parse_columns(&row_dict, "columns");
 
-                        // Убираем пустые строки
                         if content.is_some() || !columns.is_empty() {
                             return Some(Rc::new(RefCell::new(Row {
                                 content,
@@ -238,13 +152,13 @@ fn parse_nested_rows(dict: &Dictionary) -> Vec<Rc<RefCell<Row>>> {
                             })));
                         }
                     } else {
-                        nvim_oxi::api::err_writeln("Failed to parse row_dict");
+                        err_writeln("Failed to parse row_dict");
                     }
                     None
                 })
                 .collect()
         } else {
-            nvim_oxi::api::err_writeln("Failed to parse rows_array");
+            err_writeln("Failed to parse rows_array");
             vec![]
         }
     } else {
@@ -263,7 +177,6 @@ fn parse_nested_columns(dict: &Dictionary) -> Vec<Rc<RefCell<Column>>> {
                         let rows = parse_nested_rows(&column_dict);
                         let columns = parse_nested_columns(&column_dict);
 
-                        // Убираем пустые колонки
                         if content.is_some() || !rows.is_empty() || !columns.is_empty() {
                             return Some(Rc::new(RefCell::new(
                                 ColumnBuilder::new()
@@ -292,13 +205,13 @@ fn parse_nested_columns(dict: &Dictionary) -> Vec<Rc<RefCell<Column>>> {
                             )));
                         }
                     } else {
-                        nvim_oxi::api::err_writeln("Failed to parse column_dict");
+                        err_writeln("Failed to parse column_dict");
                     }
                     None
                 })
                 .collect()
         } else {
-            nvim_oxi::api::err_writeln("Failed to parse columns_array");
+            err_writeln("Failed to parse columns_array");
             vec![]
         }
     } else {
