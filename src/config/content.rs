@@ -1,12 +1,13 @@
-use nvim_oxi::Object;
-use nvim_oxi::{conversion::FromObject, Dictionary};
-use std::cell::RefCell;
-use std::rc::Rc;
+use std::{cell::RefCell, rc::Rc};
+
+use nvim_oxi::{conversion::FromObject, Dictionary, Object};
 
 use crate::error::{handle_error, PluginError};
 
-use super::highlights::{parse_highlights, Highlights};
-use super::parse_string_option;
+use super::{
+    highlights::{parse_highlights, Highlights},
+    parse_string_option,
+};
 
 #[derive(Debug)]
 pub enum Content {
@@ -110,6 +111,26 @@ impl Content {
                 "Unknown content type: {}",
                 content_type_str
             ))),
+        }
+    }
+
+    pub fn get_text(&self) -> String {
+        match self {
+            Content::Text(text_content) => {
+                // Получаем текст из TextContent
+                let text = text_content.borrow();
+                text.value.join("\n") // Объединяем строки в одну
+            }
+            Content::Buttons(buttons_content) => {
+                // Если содержимое кнопок, вы можете вернуть текст кнопок, если это необходимо
+                let buttons = buttons_content.borrow();
+                buttons
+                    .items
+                    .iter()
+                    .map(|button| button.label.clone())
+                    .collect::<Vec<_>>()
+                    .join(", ") // Объединяем текст кнопок через запятую
+            }
         }
     }
 }

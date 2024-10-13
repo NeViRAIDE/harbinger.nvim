@@ -1,6 +1,9 @@
 use nvim_oxi::{conversion::FromObject, Dictionary};
 
-use super::defaults;
+use super::defaults::{
+    DEFAULT_EXECUTE_BUTTON, DEFAULT_NAVIGATE_BUTTONS, DEFAULT_NAVIGATE_SECTIONS,
+    DEFAULT_TOGGLE_DASHBOARD,
+};
 
 #[derive(Debug, Default)]
 pub struct Keymaps {
@@ -16,23 +19,19 @@ impl Keymaps {
             toggle_dashboard: parse_string_option(
                 options,
                 "toggle_dashboard",
-                defaults::DEFAULT_TOGGLE_DASHBOARD,
+                DEFAULT_TOGGLE_DASHBOARD,
             ),
             navigate_sections: parse_string_option(
                 options,
                 "navigate_sections",
-                defaults::DEFAULT_NAVIGATE_SECTIONS,
+                DEFAULT_NAVIGATE_SECTIONS,
             ),
             navigate_buttons: parse_string_option(
                 options,
                 "navigate_buttons",
-                defaults::DEFAULT_NAVIGATE_BUTTONS,
+                DEFAULT_NAVIGATE_BUTTONS,
             ),
-            execute_button: parse_string_option(
-                options,
-                "execute_button",
-                defaults::DEFAULT_EXECUTE_BUTTON,
-            ),
+            execute_button: parse_string_option(options, "execute_button", DEFAULT_EXECUTE_BUTTON),
         }
     }
 }

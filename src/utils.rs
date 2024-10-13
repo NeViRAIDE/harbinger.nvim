@@ -1,6 +1,8 @@
 use std::{path::PathBuf, sync::OnceLock};
 
-use nvim_oxi::api::{get_option_value, get_vvar, list_bufs, opts::OptionOpts, Buffer};
+use nvim_oxi::api::{
+    get_current_win, get_option_value, get_vvar, list_bufs, opts::OptionOpts, Buffer,
+};
 
 use crate::error::{handle_error, PluginError};
 
@@ -32,7 +34,7 @@ pub fn get_window_size() -> Result<(usize, usize), PluginError> {
         return Ok((cached_width, cached_height));
     }
 
-    let win = nvim_oxi::api::get_current_win();
+    let win = get_current_win();
 
     let win_height: usize = handle_error(
         win.get_height().map_err(PluginError::Api)?.try_into(),
@@ -50,7 +52,7 @@ pub fn get_window_size() -> Result<(usize, usize), PluginError> {
 }
 
 pub fn count_file_buffers() -> usize {
-    nvim_oxi::api::list_bufs()
+    list_bufs()
         .filter(|buf| {
             let buf_type: String = get_option_value(
                 "buftype",
@@ -64,4 +66,28 @@ pub fn count_file_buffers() -> usize {
             is_valid && is_normal
         })
         .count()
+}
+
+#[macro_export]
+macro_rules! parse_items {
+    ($dict:expr, $key:expr, $parse_fn:expr) => {{
+        if let Some(obj) = $dict.get($key) {
+            if let Ok(items_array) = Vec::<Object>::from_object(obj.clone()) {
+                return items_array
+                    .into_iter()
+                    .filter_map(|item_obj| {
+                        if let Ok(item_dict) = Dictionary::from_object(item_obj) {
+                            Some(Rc::new(RefCell::new($parse_fn(&item_dict))))
+                        } else {
+                            nvim_oxi::api::err_writeln("Failed to parse item_dict");
+                            None
+                        }
+                    })
+                    .collect();
+            } else {
+                nvim_oxi::api::err_writeln(&format!("Failed to parse {}_array", $key));
+            }
+        }
+        vec![]
+    }};
 }

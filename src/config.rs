@@ -1,18 +1,19 @@
 use nvim_oxi::{conversion::FromObject, Dictionary};
 
-use self::keymaps::Keymaps;
-use self::layout::Layout;
+use defaults::DEFAULT_BORDERS;
+use keymaps::Keymaps;
+use layout::DashboardLayout;
 
 mod content;
 mod defaults;
-mod keymaps;
-mod layout;
 mod highlights;
+mod keymaps;
+pub mod layout;
 
 #[derive(Debug, Default)]
 pub struct Config {
     pub open_on_start: bool,
-    pub layout: Layout,
+    pub layout: DashboardLayout,
     pub borders: String,
     pub keymaps: Keymaps,
 }
@@ -25,8 +26,8 @@ impl Config {
                 "open_on_start",
                 defaults::DEFAULT_AUTO_OPEN,
             ),
-            layout: Layout::from_dict(&options),
-            borders: parse_string_option(&options, "borders", defaults::DEFAULT_BORDERS),
+            layout: DashboardLayout::from_dict(&options),
+            borders: parse_string_option(&options, "borders", DEFAULT_BORDERS),
             keymaps: Keymaps::from_dict(&options),
         }
     }
@@ -44,4 +45,11 @@ fn parse_bool_option(options: &Dictionary, key: &str, default: bool) -> bool {
         .get(key)
         .and_then(|obj| bool::from_object(obj.clone()).ok())
         .unwrap_or(default)
+}
+
+fn parse_usize_option(options: &Dictionary, key: &str, default: usize) -> usize {
+    options
+        .get(key)
+        .and_then(|obj| usize::from_object(obj.clone()).ok())
+        .unwrap_or_else(|| default)
 }

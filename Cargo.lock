@@ -57,7 +57,7 @@ dependencies = [
 
 [[package]]
 name = "harbinger_nvim"
-version = "2.0.0"
+version = "3.0.0"
 dependencies = [
  "dirs",
  "nvim-oxi",
@@ -97,33 +97,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "78ca9ab1a0babb1e7d5695e3530886289c18cf2f87ec19a575a0abdce112e3a3"
 
 [[package]]
-name = "mini-internal"
-version = "0.1.40"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f3cd9f9bbedc1b92683a9847b8db12f3203cf32af6a11db085fa007708dc9555"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
-]
-
-[[package]]
-name = "miniserde"
-version = "0.1.40"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e9b650e926368ad21aaabe6055341d1874df696178f47d70b6d9a691f616274e"
-dependencies = [
- "itoa",
- "mini-internal",
- "ryu",
-]
-
-[[package]]
 name = "nvim-oxi"
 version = "0.5.1"
 source = "git+https://github.com/noib3/nvim-oxi#b986c4951db0aa21c6627bf25c5d9e3e931ade07"
 dependencies = [
- "miniserde",
  "nvim-oxi-api",
  "nvim-oxi-luajit",
  "nvim-oxi-macros",

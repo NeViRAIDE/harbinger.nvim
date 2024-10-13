@@ -239,3 +239,7 @@ opts = {
     }
 }
 ```
+
+## TODO 
+
+- add `Share your config`

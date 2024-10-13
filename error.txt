@@ -1,117 +1,201 @@
-]11;?thread '<unnamed>' panicked at src/content/button.rs:156:10:
-already borrowed: BorrowMutError
-stack backtrace:
-   0:     0x767c3c4664f5 - std::backtrace_rs::backtrace::libunwind::trace::h649ab3318d3445c5
-                               at /rustc/eeb90cda1969383f56a2637cbd3037bdf598841c/library/std/src/../../backtrace/src/backtrace/libunwind.rs:116:5
-   1:     0x767c3c4664f5 - std::backtrace_rs::backtrace::trace_unsynchronized::hf4bb60c3387150c3
-                               at /rustc/eeb90cda1969383f56a2637cbd3037bdf598841c/library/std/src/../../backtrace/src/backtrace/mod.rs:66:5
-   2:     0x767c3c4664f5 - std::sys::backtrace::_print_fmt::hd9186c800e44bd00
-                               at /rustc/eeb90cda1969383f56a2637cbd3037bdf598841c/library/std/src/sys/backtrace.rs:65:5
-   3:     0x767c3c4664f5 - <std::sys::backtrace::BacktraceLock::print::DisplayBacktrace as core::fmt::Display>::fmt::h1b9dad2a88e955ff
-                               at /rustc/eeb90cda1969383f56a2637cbd3037bdf598841c/library/std/src/sys/backtrace.rs:40:26
-   4:     0x767c3c485d2b - core::fmt::rt::Argument::fmt::h351a7824f737a6a0
-                               at /rustc/eeb90cda1969383f56a2637cbd3037bdf598841c/library/core/src/fmt/rt.rs:173:76
-   5:     0x767c3c485d2b - core::fmt::write::h4b5a1270214bc4a7
-                               at /rustc/eeb90cda1969383f56a2637cbd3037bdf598841c/library/core/src/fmt/mod.rs:1182:21
-   6:     0x767c3c46482f - std::io::Write::write_fmt::hd04af345a50c312d
-                               at /rustc/eeb90cda1969383f56a2637cbd3037bdf598841c/library/std/src/io/mod.rs:1827:15
-   7:     0x767c3c467561 - std::sys::backtrace::BacktraceLock::print::h68d41b51481bce5c
-                               at /rustc/eeb90cda1969383f56a2637cbd3037bdf598841c/library/std/src/sys/backtrace.rs:43:9
-   8:     0x767c3c467561 - std::panicking::default_hook::{{closure}}::h96ab15e9936be7ed
-                               at /rustc/eeb90cda1969383f56a2637cbd3037bdf598841c/library/std/src/panicking.rs:269:22
-   9:     0x767c3c46723c - std::panicking::default_hook::h3cacb9c27561ad33
-                               at /rustc/eeb90cda1969383f56a2637cbd3037bdf598841c/library/std/src/panicking.rs:296:9
-  10:     0x767c3c467b31 - std::panicking::rust_panic_with_hook::hfe205f6954b2c97b
-                               at /rustc/eeb90cda1969383f56a2637cbd3037bdf598841c/library/std/src/panicking.rs:800:13
-  11:     0x767c3c467a27 - std::panicking::begin_panic_handler::{{closure}}::h6cb44b3a50f28c44
-                               at /rustc/eeb90cda1969383f56a2637cbd3037bdf598841c/library/std/src/panicking.rs:674:13
-  12:     0x767c3c4669b9 - std::sys::backtrace::__rust_end_short_backtrace::hf1c1f2a92799bb0e
-                               at /rustc/eeb90cda1969383f56a2637cbd3037bdf598841c/library/std/src/sys/backtrace.rs:168:18
-  13:     0x767c3c4676b4 - rust_begin_unwind
-                               at /rustc/eeb90cda1969383f56a2637cbd3037bdf598841c/library/std/src/panicking.rs:665:5
-  14:     0x767c3c3d6db3 - core::panicking::panic_fmt::h3d8fc78294164da7
-                               at /rustc/eeb90cda1969383f56a2637cbd3037bdf598841c/library/core/src/panicking.rs:74:14
-  15:     0x767c3c3d6c93 - core::cell::panic_already_borrowed::h47d80d4a02d76176
-                               at /rustc/eeb90cda1969383f56a2637cbd3037bdf598841c/library/core/src/cell.rs:785:5
-  16:     0x767c3c407a5c - core::cell::RefCell<T>::borrow_mut::hb2996a0336a9b533
-                               at /rustc/eeb90cda1969383f56a2637cbd3037bdf598841c/library/core/src/cell.rs:1076:25
-  17:     0x767c3c40286c - harbinger::content::button::create_buttons::h84bfe20d9b0da948
-                               at /home/ra/GitHub/neviraide/harbinger.nvim/src/content/button.rs:155:5
-  18:     0x767c3c3f19e1 - harbinger::core::Dashboard::setup::h6a65767863f4a712
-                               at /home/ra/GitHub/neviraide/harbinger.nvim/src/core.rs:65:23
-  19:     0x767c3c40f19d - harbinger::harbinger::{{closure}}::h7e319925f816d2ba
-                               at /home/ra/GitHub/neviraide/harbinger.nvim/src/lib.rs:32:17
-  20:     0x767c3c3dc0fd - nvim_oxi_luajit::function::store::{{closure}}::{{closure}}::h779a2381158369ba
-                               at /home/ra/.cargo/registry/src/index.crates.io-6f17d22bba15001f/nvim-oxi-luajit-0.5.1/src/function.rs:35:27
-  21:     0x767c3c4456a2 - nvim_oxi_luajit::function::store::c_fun::hb8eca255ee8a728c
-                               at /home/ra/.cargo/registry/src/index.crates.io-6f17d22bba15001f/nvim-oxi-luajit-0.5.1/src/function.rs:28:9
-  22:     0x767c3ce51f06 - <unknown>
-  23:     0x767c3ce660aa - lua_pcall
-  24:     0x61881d992961 - nlua_pcall
-  25:     0x61881d9a0a33 - nlua_call_ref
-  26:     0x61881d88ccbc - <unknown>
-  27:     0x61881d88f164 - getnextac
-  28:     0x61881d92a339 - do_cmdline
-  29:     0x61881d88dab7 - apply_autocmds_group
-  30:     0x61881d88e1e7 - apply_autocmds
-  31:     0x61881d9a70f2 - main
-  32:     0x767c3cb5ae08 - <unknown>
-  33:     0x767c3cb5aecc - __libc_start_main
-  34:     0x61881d853065 - _start
-  35:                0x0 - <unknown>
-thread '<unnamed>' panicked at library/core/src/panicking.rs:221:5:
-panic in a function that cannot unwind
-stack backtrace:
-   0:     0x767c3c4664f5 - std::backtrace_rs::backtrace::libunwind::trace::h649ab3318d3445c5
-                               at /rustc/eeb90cda1969383f56a2637cbd3037bdf598841c/library/std/src/../../backtrace/src/backtrace/libunwind.rs:116:5
-   1:     0x767c3c4664f5 - std::backtrace_rs::backtrace::trace_unsynchronized::hf4bb60c3387150c3
-                               at /rustc/eeb90cda1969383f56a2637cbd3037bdf598841c/library/std/src/../../backtrace/src/backtrace/mod.rs:66:5
-   2:     0x767c3c4664f5 - std::sys::backtrace::_print_fmt::hd9186c800e44bd00
-                               at /rustc/eeb90cda1969383f56a2637cbd3037bdf598841c/library/std/src/sys/backtrace.rs:65:5
-   3:     0x767c3c4664f5 - <std::sys::backtrace::BacktraceLock::print::DisplayBacktrace as core::fmt::Display>::fmt::h1b9dad2a88e955ff
-                               at /rustc/eeb90cda1969383f56a2637cbd3037bdf598841c/library/std/src/sys/backtrace.rs:40:26
-   4:     0x767c3c485d2b - core::fmt::rt::Argument::fmt::h351a7824f737a6a0
-                               at /rustc/eeb90cda1969383f56a2637cbd3037bdf598841c/library/core/src/fmt/rt.rs:173:76
-   5:     0x767c3c485d2b - core::fmt::write::h4b5a1270214bc4a7
-                               at /rustc/eeb90cda1969383f56a2637cbd3037bdf598841c/library/core/src/fmt/mod.rs:1182:21
-   6:     0x767c3c46482f - std::io::Write::write_fmt::hd04af345a50c312d
-                               at /rustc/eeb90cda1969383f56a2637cbd3037bdf598841c/library/std/src/io/mod.rs:1827:15
-   7:     0x767c3c467561 - std::sys::backtrace::BacktraceLock::print::h68d41b51481bce5c
-                               at /rustc/eeb90cda1969383f56a2637cbd3037bdf598841c/library/std/src/sys/backtrace.rs:43:9
-   8:     0x767c3c467561 - std::panicking::default_hook::{{closure}}::h96ab15e9936be7ed
-                               at /rustc/eeb90cda1969383f56a2637cbd3037bdf598841c/library/std/src/panicking.rs:269:22
-   9:     0x767c3c46723c - std::panicking::default_hook::h3cacb9c27561ad33
-                               at /rustc/eeb90cda1969383f56a2637cbd3037bdf598841c/library/std/src/panicking.rs:296:9
-  10:     0x767c3c467b31 - std::panicking::rust_panic_with_hook::hfe205f6954b2c97b
-                               at /rustc/eeb90cda1969383f56a2637cbd3037bdf598841c/library/std/src/panicking.rs:800:13
-  11:     0x767c3c4679f3 - std::panicking::begin_panic_handler::{{closure}}::h6cb44b3a50f28c44
-                               at /rustc/eeb90cda1969383f56a2637cbd3037bdf598841c/library/std/src/panicking.rs:667:13
-  12:     0x767c3c4669b9 - std::sys::backtrace::__rust_end_short_backtrace::hf1c1f2a92799bb0e
-                               at /rustc/eeb90cda1969383f56a2637cbd3037bdf598841c/library/std/src/sys/backtrace.rs:168:18
-  13:     0x767c3c4676b4 - rust_begin_unwind
-                               at /rustc/eeb90cda1969383f56a2637cbd3037bdf598841c/library/std/src/panicking.rs:665:5
-  14:     0x767c3c3d6df5 - core::panicking::panic_nounwind_fmt::runtime::h907a0444fa61a6dc
-                               at /rustc/eeb90cda1969383f56a2637cbd3037bdf598841c/library/core/src/panicking.rs:112:18
-  15:     0x767c3c3d6df5 - core::panicking::panic_nounwind_fmt::h4c4dc67d0bbc166c
-                               at /rustc/eeb90cda1969383f56a2637cbd3037bdf598841c/library/core/src/panicking.rs:122:5
-  16:     0x767c3c3d6e82 - core::panicking::panic_nounwind::hb98133c151c787e4
-                               at /rustc/eeb90cda1969383f56a2637cbd3037bdf598841c/library/core/src/panicking.rs:221:5
-  17:     0x767c3c3d7046 - core::panicking::panic_cannot_unwind::he9511e6e72319a3e
-                               at /rustc/eeb90cda1969383f56a2637cbd3037bdf598841c/library/core/src/panicking.rs:309:5
-  18:     0x767c3c445666 - nvim_oxi_luajit::function::store::c_fun::hb8eca255ee8a728c
-                               at /home/ra/.cargo/registry/src/index.crates.io-6f17d22bba15001f/nvim-oxi-luajit-0.5.1/src/function.rs:21:5
-  19:     0x767c3ce51f06 - <unknown>
-  20:     0x767c3ce660aa - lua_pcall
-  21:     0x61881d992961 - nlua_pcall
-  22:     0x61881d9a0a33 - nlua_call_ref
-  23:     0x61881d88ccbc - <unknown>
-  24:     0x61881d88f164 - getnextac
-  25:     0x61881d92a339 - do_cmdline
-  26:     0x61881d88dab7 - apply_autocmds_group
-  27:     0x61881d88e1e7 - apply_autocmds
-  28:     0x61881d9a70f2 - main
-  29:     0x767c3cb5ae08 - <unknown>
-  30:     0x767c3cb5aecc - __libc_start_main
-  31:     0x61881d853065 - _start
-  32:                0x0 - <unknown>
-thread caused non-unwinding panic. aborting.
+Config {
+    open_on_start: true, 
+    layout: DashboardLayout {
+        rows: [
+            RefCell { value: Row {
+                columns: [
+                    RefCell { value: Column {
+                        width: "100%", 
+                        height: "100%", 
+                        content: Some(Text(RefCell { 
+                            value: TextContent { 
+                                value: [ "Welcome to the Harbinger Dashboard!", "This is a fully customizable interface."], 
+                                alignment: Alignment { horizontal: Center, vertical: Top } 
+                            } 
+                        })), 
+                        rows: [], 
+                        columns: [], 
+                        active: false, 
+                        highlights: Some(Highlights { 
+                            fg: "#FFFFFF", 
+                            bg: "#000000" 
+                        }), 
+                        priority: Some(1), 
+                        hide_on_resize: Some(false) 
+                    } }
+                ], 
+                content: None, 
+                width: "100%", 
+                height: "50%", 
+                priority: Some(1), 
+                hide_on_resize: Some(false) 
+            } }, 
+
+            RefCell { value: Row { 
+                columns: [
+                    RefCell { value: Column { 
+                        width: "33%", 
+                        height: "100%", 
+                        content: None, 
+                        rows: [
+                            RefCell { value: Row { 
+                                columns: [], 
+                                content: Some(Text(RefCell { 
+                                    value: TextContent { 
+                                        value: ["Left Column - Row 1"], 
+                                        alignment: Alignment { horizontal: Center, vertical: Middle } 
+                                    } 
+                                })), 
+                                width: "100%", 
+                                height: "33%", 
+                                priority: Some(1), 
+                                hide_on_resize: Some(false) 
+                            } }, 
+
+                            RefCell { value: Row { 
+                                columns: [], 
+                                content: Some(Text(RefCell { 
+                                    value: TextContent { 
+                                        value: ["Left Column - Row 2"], 
+                                        alignment: Alignment { horizontal: Center, vertical: Middle } 
+                                    } 
+                                })), 
+                                width: "100%", 
+                                height: "33%", 
+                                priority: Some(1), 
+                                hide_on_resize: Some(false) 
+                            } }, 
+
+                            RefCell { value: Row { 
+                                columns: [
+                                    RefCell { value: Column { 
+                                        width: "50%", 
+                                        height: "100%", 
+                                        content: Some(Text(RefCell { 
+                                            value: TextContent { 
+                                                value: ["Subsection - Left Part of Third Row"], 
+                                                alignment: Alignment { horizontal: Center, vertical: Middle } 
+                                            } 
+                                        })), 
+                                        rows: [], 
+                                        columns: [], 
+                                        active: false, 
+                                        highlights: Some(Highlights { 
+                                            fg: "#00FF00", 
+                                            bg: "#444444" 
+                                        }), 
+                                        priority: Some(1), 
+                                        hide_on_resize: Some(false) 
+                                    } }, 
+
+                                    RefCell { value: Column { 
+                                        width: "50%", 
+                                        height: "100%", 
+                                        content: Some(Text(RefCell { 
+                                            value: TextContent { 
+                                                value: ["Subsection - Right Part of Third Row"], 
+                                                alignment: Alignment { horizontal: Center, vertical: Middle } 
+                                            } 
+                                        })), 
+                                        rows: [], 
+                                        columns: [], 
+                                        active: false, 
+                                        highlights: Some(Highlights { 
+                                            fg: "#00FFFF", 
+                                            bg: "#555555" 
+                                        }), 
+                                        priority: Some(1), 
+                                        hide_on_resize: Some(false) 
+                                    } }
+                                ], 
+                                content: None, 
+                                width: "100%", 
+                                height: "34%", 
+                                priority: Some(1), 
+                                hide_on_resize: Some(false) 
+                            } }
+                        ], 
+                        columns: [], 
+                        active: false, 
+                        highlights: None, 
+                        priority: Some(1), 
+                        hide_on_resize: Some(false) 
+                    } }, 
+
+                    RefCell { value: Column { 
+                        width: "33%", 
+                        height: "100%", 
+                        content: Some(Buttons( RefCell { 
+                            value: ButtonsContent { items: [
+                                Button { label: "New File", command: VimCommand(":ene"), icon: Some("📄"), highlights: Highlights { fg: "#FF00FF", bg: "#666666" } }, 
+                                Button { label: "Find File", command: VimCommand(":Telescope find_files"), icon: Some("🔍"), highlights: Highlights { fg: "#FFFF00", bg: "#777777" } }
+                            ] } 
+                        })), 
+                        rows: [], 
+                        columns: [], 
+                        active: true, 
+                        highlights: Some(Highlights { 
+                            fg: "#00FFFF", 
+                            bg: "#000000" 
+                        }), 
+                        priority: Some(1), 
+                        hide_on_resize: Some(false) 
+                    } }, 
+
+                    RefCell { value: Column { 
+                        width: "34%", 
+                        height: "100%", 
+                        content: None, 
+                        rows: [
+                            RefCell { value: Row { 
+                                columns: [], 
+                                content: Some(Text(RefCell { 
+                                    value: TextContent { 
+                                        value: ["Right Column - Top Row"], 
+                                        alignment: Alignment { horizontal: Center, vertical: Middle } 
+                                    } 
+                                })), 
+                                width: "100%", 
+                                height: "50%", 
+                                priority: Some(1), 
+                                hide_on_resize: Some(false) 
+                            } }, 
+
+                            RefCell { value: Row { 
+                                columns: [], 
+                                content: Some(Text(RefCell { 
+                                    value: TextContent { 
+                                        value: ["Right Column - Bottom Row"], 
+                                        alignment: Alignment { horizontal: Center, vertical: Middle } 
+                                    } 
+                                })), 
+                                width: "100%", 
+                                height: "50%", 
+                                priority: Some(1), 
+                                hide_on_resize: Some(false) 
+                            } }
+                        ], 
+                        columns: [], 
+                        active: false, 
+                        highlights: None, 
+                        priority: Some(1), 
+                        hide_on_resize: Some(false) 
+                    } }
+                ], 
+                content: None, 
+                width: "100%", 
+                height: "50%", 
+                priority: Some(1), 
+                hide_on_resize: Some(false) 
+            } }
+        ] 
+    }, 
+    borders: "rounded", 
+    keymaps: Keymaps { 
+        toggle_dashboard: "<M-d>", 
+        navigate_sections: "<Tab>", 
+        navigate_buttons: "<Down>", 
+        execute_button: "<Enter>" 
+    } 
+}              
+Widgets: 8    

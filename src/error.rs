@@ -1,4 +1,4 @@
-use std::io::Error as IoError;
+use std::{fmt::Display, io::Error as IoError};
 
 use nvim_oxi::{
     api::{err_writeln, Error as OxiApiError},
@@ -27,7 +27,7 @@ impl From<PluginError> for OxiError {
 
 pub fn handle_error<T, E>(result: Result<T, E>, context: &str) -> Result<T, PluginError>
 where
-    E: std::fmt::Display,
+    E: Display,
 {
     result.map_err(|e| {
         let err_msg = format!("{}: {}", context, e);

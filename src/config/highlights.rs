@@ -1,5 +1,4 @@
-use nvim_oxi::conversion::FromObject;
-use nvim_oxi::Dictionary;
+use nvim_oxi::{conversion::FromObject, Dictionary};
 
 use super::parse_string_option;
 
