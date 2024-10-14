@@ -1,89 +1,50 @@
 use std::{cell::RefCell, rc::Rc};
 
-use nvim_oxi::{
-    api::{create_autocmd, err_writeln, opts::CreateAutocmdOpts},
-    Function, Result as OxiResult,
-};
+use nvim_oxi::Result as OxiResult;
 
 use crate::{
     config::{
         layout::{Column, Row},
         Config,
     },
-    utils::should_open_dashboard,
     widget::WidgetManager,
 };
 
-#[derive(Debug)]
 pub struct Dashboard {
-    config: Config,
+    pub config: Config,
     widget_manager: WidgetManager,
 }
 
 impl Dashboard {
-    pub fn new(config: Config) -> OxiResult<Self> {
+    pub fn new(config: Config) -> OxiResult<Rc<RefCell<Self>>> {
         let w_man = WidgetManager::new()?;
 
-        Ok(Dashboard {
+        Ok(Rc::new(RefCell::new(Dashboard {
             config,
             widget_manager: w_man,
-        })
+        })))
     }
 
-    pub fn setup(self: Rc<Self>) -> OxiResult<()> {
-        // if self.config.open_on_start {
-        //     let dashboard_handle = Rc::clone(&self);
-        //
-        //     let autocmd_opts = CreateAutocmdOpts::builder()
-        //         .callback(Function::from_fn(move |_| -> OxiResult<bool> {
-        //             if should_open_dashboard() {
-        //                 if let Err(e) = dashboard_handle.open_dashboard() {
-        //                     err_writeln(&format!("Failed to open dashboard: {}", e));
-        //                 }
-        //             }
-        //             Ok(true)
-        //         }))
-        //         .build();
-        //
-        //     create_autocmd(["UIEnter"], &autocmd_opts)?;
-        // }
-
-        let dashboard_handle = Rc::clone(&self);
-        nvim_oxi::api::set_keymap(
-            nvim_oxi::api::types::Mode::Normal,
-            &dashboard_handle.config.keymaps.toggle_dashboard,
-            "",
-            &nvim_oxi::api::opts::SetKeymapOpts::builder()
-                .callback(Function::from_fn(move |_| -> OxiResult<()> {
-                    self.toggle_dashboard()
-                }))
-                .build(),
-        )?;
-
+    pub fn toggle_dashboard(&mut self) -> OxiResult<()> {
+        if self.config.open_on_start {
+            self.close_dashboard()?;
+        } else {
+            self.open_dashboard()?;
+        }
+        self.config.open_on_start = !self.config.open_on_start;
         Ok(())
     }
 
-    // fn open_on_start(&self) {
-    //
-    // }
-
-    fn toggle_dashboard(&self) -> OxiResult<()> {
-        self.open_dashboard();
-        // i tyt budet esli otrkit to zakrit' a esli ne otrkit to oitkrit'
-
-        Ok(())
-    }
-
-    fn open_dashboard(&self) -> Result<(), String> {
-        nvim_oxi::print!("{:?}", self.config);
-        // Печать текущего конфига
+    fn open_dashboard(&mut self) -> OxiResult<()> {
         // nvim_oxi::print!("{:?}", self.config);
+        self.widget_manager.render_dashboard(&self.config)?;
+        // let count = self.count_widgets();
+        // nvim_oxi::print!("Widgets: {:?}", count);
+        Ok(())
+    }
 
-        // Подсчет количества строк
-        let count = self.count_widgets();
-
-        nvim_oxi::print!("Widgets: {:?}", count);
-
+    fn close_dashboard(&mut self) -> OxiResult<()> {
+        self.widget_manager.close_all_widgets()?;
         Ok(())
     }
 
@@ -122,7 +83,6 @@ impl Dashboard {
     }
 
     fn handle_resize(&mut self) -> OxiResult<()> {
-        // Пересчитать размеры и позиции всех виджетов
-        self.widget_manager.update_widgets(&self.config)
+        self.widget_manager.update_widgets()
     }
 }
